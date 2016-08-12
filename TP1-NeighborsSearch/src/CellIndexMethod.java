@@ -39,12 +39,12 @@ public class CellIndexMethod {
 
 	}
 
-	private void addNeighbors(Cell c, Particle p, Map<Particle, Set<Particle>> m) {
+	private void addNeighbors(Cell c, Particle p, Map<Particle, Set<Particle>> m, int deltaX, int deltaY) {
 		for (Particle candidate : c.set) {
 			if (!candidate.equals(p)) {
 				if (!m.get(p).contains(candidate)) {
-					double distance = Math.sqrt(Math.pow(p.x - candidate.x, 2) + Math.pow(p.y - candidate.y, 2)) - p.r
-							- candidate.r;
+					double distance = Math.sqrt(Math.pow(p.x - (candidate.x + deltaX * L), 2)
+							+ Math.pow(p.y - (candidate.y + deltaY * L), 2)) - p.r - candidate.r;
 					if (distance <= rc) {
 						m.get(p).add(candidate);
 						if (!m.containsKey(candidate))
@@ -54,6 +54,51 @@ public class CellIndexMethod {
 				}
 			}
 		}
+	}
+
+	public Map<Particle, Set<Particle>> findNeighbors() {
+		Map<Particle, Set<Particle>> map = new HashMap<>();
+
+		for (Particle particle : allParticles.keySet()) {
+			if (!map.containsKey(particle))
+				map.put(particle, new HashSet<>());
+			Point coords = allParticles.get(particle);
+			Cell aux;
+
+			aux = matrix[coords.x][coords.y];
+			addNeighbors(aux, particle, map, 0, 0);
+
+			aux = matrix[(coords.x - 1) % M][coords.y];
+			if (coords.x - 1 >= 0) {
+				addNeighbors(aux, particle, map, 0, 0);
+			} else if (contour) {
+				addNeighbors(aux, particle, map, -1, 0);
+			}
+
+			aux = matrix[(coords.x - 1) % M][(coords.y + 1) % M];
+			if (coords.x - 1 >= 0 && coords.y + 1 < M) {
+				addNeighbors(aux, particle, map, 0, 0);
+			} else if (contour) {
+				addNeighbors(aux, particle, map, coords.x - 1 >= 0 ? 0 : -1, coords.y + 1 < M ? 0 : -1);
+			}
+
+			aux = matrix[coords.x][(coords.y + 1) % M];
+			if (coords.y + 1 < M) {
+				addNeighbors(aux, particle, map, 0, 0);
+			} else if (contour) {
+				addNeighbors(aux, particle, map, 0, -1);
+			}
+
+			aux = matrix[(coords.x + 1) % M][(coords.y + 1) % M];
+			if (coords.x + 1 < M && coords.y + 1 < M) {
+				addNeighbors(aux, particle, map, 0, 0);
+			} else if (contour) {
+				addNeighbors(aux, particle, map, coords.x + 1 < M ? 0 : 1, coords.y + 1 < M ? 0 : -1);
+			}
+
+		}
+
+		return map;
 	}
 
 	public Map<Particle, Set<Particle>> findNeighborsBruteForce() {
@@ -83,9 +128,9 @@ public class CellIndexMethod {
 						distance4 = Math.sqrt(
 								Math.pow(particle.x - particle2.x, 2) + Math.pow(particle.y - (particle2.y + L), 2))
 								- particle.r - particle2.r;
-						
+
 						double min = Math.min(distance1, Math.min(distance2, Math.min(distance3, distance4)));
-						
+
 						distance = Math.min(distance, min);
 					}
 
@@ -98,43 +143,6 @@ public class CellIndexMethod {
 				}
 			}
 		}
-		return map;
-	}
-
-	public Map<Particle, Set<Particle>> findNeighbors() {
-		Map<Particle, Set<Particle>> map = new HashMap<>();
-
-		for (Particle particle : allParticles.keySet()) {
-			if (!map.containsKey(particle))
-				map.put(particle, new HashSet<>());
-			Point coords = allParticles.get(particle);
-			Cell aux;
-
-			aux = matrix[coords.x][coords.y];
-			addNeighbors(aux, particle, map);
-
-			if (coords.x - 1 >= 0) {
-				aux = matrix[coords.x - 1][coords.y];
-				addNeighbors(aux, particle, map);
-			}
-
-			if (coords.x - 1 >= 0 && coords.y + 1 < M) {
-				aux = matrix[coords.x - 1][coords.y + 1];
-				addNeighbors(aux, particle, map);
-			}
-
-			if (coords.y + 1 < M) {
-				aux = matrix[coords.x][coords.y + 1];
-				addNeighbors(aux, particle, map);
-			}
-
-			if (coords.x + 1 < M && coords.y + 1 < M) {
-				aux = matrix[coords.x + 1][coords.y + 1];
-				addNeighbors(aux, particle, map);
-			}
-
-		}
-
 		return map;
 	}
 
@@ -191,16 +199,16 @@ public class CellIndexMethod {
 			return;
 		}
 
-//		Map<Particle, Set<Particle>> neighbors = cim.findNeighbors();
-//
-//		for (Particle p : neighbors.keySet()) {
-//			System.out.println("Particle n: " + p.id);
-//			for (Particle n : neighbors.get(p)) {
-//				System.out.println("\tNeighbor: " + n.id);
-//			}
-//		}
+		// Map<Particle, Set<Particle>> neighbors = cim.findNeighbors();
+		//
+		// for (Particle p : neighbors.keySet()) {
+		// System.out.println("Particle n: " + p.id);
+		// for (Particle n : neighbors.get(p)) {
+		// System.out.println("\tNeighbor: " + n.id);
+		// }
+		// }
 
-		Map<Particle, Set<Particle>> neighbors = cim.findNeighborsBruteForce();
+		Map<Particle, Set<Particle>> neighbors = cim.findNeighbors();
 
 		for (Particle p : neighbors.keySet()) {
 			System.out.println("Particle n: " + p.id);
