@@ -7,6 +7,8 @@ import java.util.Set;
 public class Main {
 
 	private static CellIndexMethod load() {
+		
+		System.out.println("L M rc N x y r contour:");
 		Scanner scanner = new Scanner(System.in);
 		CellIndexMethod cim = new CellIndexMethod();
 
@@ -62,6 +64,7 @@ public class Main {
 	}
 
 	public static void generateOvitoInput() {
+		System.out.println("N L R:");
 		Scanner scanner = new Scanner(System.in);
 		int N = scanner.nextInt();
 		double L = scanner.nextDouble();
@@ -77,18 +80,24 @@ public class Main {
 	}
 
 	public static void main(String[] args) {
-
-		CellIndexMethod cim = load();
-		if (cim == null) {
-			return;
-		}
-		Map<Particle, Set<Particle>> neighborsBF = cim.findNeighborsBruteForce();
-		prettyPrint(neighborsBF);
-//		System.out.println("---------------------------");
-//		Map<Particle, Set<Particle>> neighbors = cim.findNeighbors();
-//		prettyPrint(neighbors);
 		
-//		generateOvitoInput();
-
+		System.out.print("[1] To generate particles - [2] To calculate Neighbors: ");
+		Scanner s = new Scanner(System.in);
+		int option = s.nextInt();
+		if (option==1){
+			generateOvitoInput();
+		}else if(option==2){
+			CellIndexMethod cim = load();
+			if (cim == null) {
+				s.close();
+				return;
+			}
+			Map<Particle, Set<Particle>> neighborsBF = cim.findNeighborsBruteForce();
+			prettyPrint(neighborsBF);
+		}
+		else {
+			System.out.println("wrong option");
+		}
+		s.close();
 	}
 }
