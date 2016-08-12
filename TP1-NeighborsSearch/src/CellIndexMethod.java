@@ -1,8 +1,6 @@
 import java.awt.Point;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
@@ -70,6 +68,27 @@ public class CellIndexMethod {
 					double distance = Math
 							.sqrt(Math.pow(particle.x - particle2.x, 2) + Math.pow(particle.y - particle2.y, 2))
 							- particle.r - particle2.r;
+
+					if (contour) {
+						double distance1, distance2, distance3, distance4;
+						distance1 = Math.sqrt(
+								Math.pow(particle.x - (particle2.x - L), 2) + Math.pow(particle.y - particle2.y, 2))
+								- particle.r - particle2.r;
+						distance2 = Math.sqrt(
+								Math.pow(particle.x - (particle2.x + L), 2) + Math.pow(particle.y - particle2.y, 2))
+								- particle.r - particle2.r;
+						distance3 = Math.sqrt(
+								Math.pow(particle.x - particle2.x, 2) + Math.pow(particle.y - (particle2.y - L), 2))
+								- particle.r - particle2.r;
+						distance4 = Math.sqrt(
+								Math.pow(particle.x - particle2.x, 2) + Math.pow(particle.y - (particle2.y + L), 2))
+								- particle.r - particle2.r;
+						
+						double min = Math.min(distance1, Math.min(distance2, Math.min(distance3, distance4)));
+						
+						distance = Math.min(distance, min);
+					}
+
 					if (distance <= rc) {
 						map.get(particle).add(particle2);
 						if (!map.containsKey(particle2))
@@ -172,16 +191,16 @@ public class CellIndexMethod {
 			return;
 		}
 
-		Map<Particle, Set<Particle>> neighbors = cim.findNeighbors();
+//		Map<Particle, Set<Particle>> neighbors = cim.findNeighbors();
+//
+//		for (Particle p : neighbors.keySet()) {
+//			System.out.println("Particle n: " + p.id);
+//			for (Particle n : neighbors.get(p)) {
+//				System.out.println("\tNeighbor: " + n.id);
+//			}
+//		}
 
-		for (Particle p : neighbors.keySet()) {
-			System.out.println("Particle n: " + p.id);
-			for (Particle n : neighbors.get(p)) {
-				System.out.println("\tNeighbor: " + n.id);
-			}
-		}
-
-		neighbors = cim.findNeighborsBruteForce();
+		Map<Particle, Set<Particle>> neighbors = cim.findNeighborsBruteForce();
 
 		for (Particle p : neighbors.keySet()) {
 			System.out.println("Particle n: " + p.id);
