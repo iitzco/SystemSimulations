@@ -1,9 +1,11 @@
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
 /*
  * Example input:
@@ -31,75 +33,38 @@ public class CellIndexMethod {
 
 	private static class Cell {
 
-		List<Particle> list;
+		Set<Particle> set;
 
 		public Cell() {
-			list = new ArrayList<>();
+			set = new HashSet<>();
 		}
 
 	}
 
-	private static class Particle {
-
-		static int count = 1;
-
-		int id;
-		double x;
-		double y;
-		double r;
-
-		public Particle(double x, double y, double r) {
-			this.id = count++;
-			this.x = x;
-			this.y = y;
-			this.r = r;
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + id;
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			Particle other = (Particle) obj;
-			if (id != other.id)
-				return false;
-			return true;
-		}
-
-	}
-
-	private void addNeighbors(Cell c, Particle p, Map<Particle, List<Particle>> m) {
-		for (Particle candidate : c.list) {
+	private void addNeighbors(Cell c, Particle p, Map<Particle, Set<Particle>> m) {
+		for (Particle candidate : c.set) {
 			if (!candidate.equals(p)) {
-				double distance = Math.sqrt(Math.pow(p.x - candidate.x, 2) + Math.pow(p.y - candidate.y, 2)) - p.r
-						- candidate.r;
-				if (distance <= rc && !m.get(p).contains(candidate)) {
-					m.get(p).add(candidate);
-					if (!m.containsKey(candidate))
-						m.put(candidate, new ArrayList<>());
-					m.get(candidate).add(p);
+				if (!m.get(p).contains(candidate)) {
+					double distance = Math.sqrt(Math.pow(p.x - candidate.x, 2) + Math.pow(p.y - candidate.y, 2)) - p.r
+							- candidate.r;
+					if (distance <= rc) {
+						m.get(p).add(candidate);
+						if (!m.containsKey(candidate))
+							m.put(candidate, new HashSet<>());
+						m.get(candidate).add(p);
+					}
 				}
 			}
 		}
 	}
 
-	public Map<Particle, List<Particle>> findNeighborsBruteForce() {
-		Map<Particle, List<Particle>> map = new HashMap<>();
+	public Map<Particle, Set<Particle>> findNeighborsBruteForce() {
+		Map<Particle, Set<Particle>> map = new HashMap<>();
 
 		for (Particle particle : allParticles.keySet()) {
 			if (!map.containsKey(particle))
-				map.put(particle, new ArrayList<>());
+				map.put(particle, new HashSet<>());
+
 			for (Particle particle2 : allParticles.keySet()) {
 				if (!particle.equals(particle2) && !map.get(particle).contains(particle2)) {
 					double distance = Math
@@ -108,7 +73,7 @@ public class CellIndexMethod {
 					if (distance <= rc) {
 						map.get(particle).add(particle2);
 						if (!map.containsKey(particle2))
-							map.put(particle2, new ArrayList<>());
+							map.put(particle2, new HashSet<>());
 						map.get(particle2).add(particle);
 					}
 				}
@@ -117,12 +82,12 @@ public class CellIndexMethod {
 		return map;
 	}
 
-	public Map<Particle, List<Particle>> findNeighbors() {
-		Map<Particle, List<Particle>> map = new HashMap<>();
+	public Map<Particle, Set<Particle>> findNeighbors() {
+		Map<Particle, Set<Particle>> map = new HashMap<>();
 
 		for (Particle particle : allParticles.keySet()) {
 			if (!map.containsKey(particle))
-				map.put(particle, new ArrayList<>());
+				map.put(particle, new HashSet<>());
 			Point coords = allParticles.get(particle);
 			Cell aux;
 
@@ -177,7 +142,7 @@ public class CellIndexMethod {
 			if (cim.matrix[x][y] == null)
 				cim.matrix[x][y] = new Cell();
 			try {
-				cim.matrix[x][y].list.add(p);
+				cim.matrix[x][y].set.add(p);
 			} catch (IndexOutOfBoundsException e) {
 				System.out.println("Invalid Particle, exceeds space.");
 				scanner.close();
@@ -207,7 +172,7 @@ public class CellIndexMethod {
 			return;
 		}
 
-		Map<Particle, List<Particle>> neighbors = cim.findNeighbors();
+		Map<Particle, Set<Particle>> neighbors = cim.findNeighbors();
 
 		for (Particle p : neighbors.keySet()) {
 			System.out.println("Particle n: " + p.id);
@@ -215,7 +180,7 @@ public class CellIndexMethod {
 				System.out.println("\tNeighbor: " + n.id);
 			}
 		}
-		
+
 		neighbors = cim.findNeighborsBruteForce();
 
 		for (Particle p : neighbors.keySet()) {
