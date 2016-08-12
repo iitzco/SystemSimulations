@@ -9,7 +9,7 @@ import java.util.Set;
  * Example input:
 10
 1
-0,25
+0.25
 4
 1 1 1
 1 1 1
@@ -101,6 +101,12 @@ public class CellIndexMethod {
 		return map;
 	}
 
+	private double getDistance(Particle fixed, Particle moving, int deltaX, int deltaY) {
+		return Math
+				.sqrt(Math.pow(fixed.x - (moving.x + deltaX * L), 2) + Math.pow(fixed.y - (moving.y + deltaY * L), 2))
+				- fixed.r - moving.r;
+	}
+
 	public Map<Particle, Set<Particle>> findNeighborsBruteForce() {
 		Map<Particle, Set<Particle>> map = new HashMap<>();
 
@@ -110,24 +116,14 @@ public class CellIndexMethod {
 
 			for (Particle particle2 : allParticles.keySet()) {
 				if (!particle.equals(particle2) && !map.get(particle).contains(particle2)) {
-					double distance = Math
-							.sqrt(Math.pow(particle.x - particle2.x, 2) + Math.pow(particle.y - particle2.y, 2))
-							- particle.r - particle2.r;
+					double distance = getDistance(particle, particle2, 0, 0);
 
 					if (contour) {
 						double distance1, distance2, distance3, distance4;
-						distance1 = Math.sqrt(
-								Math.pow(particle.x - (particle2.x - L), 2) + Math.pow(particle.y - particle2.y, 2))
-								- particle.r - particle2.r;
-						distance2 = Math.sqrt(
-								Math.pow(particle.x - (particle2.x + L), 2) + Math.pow(particle.y - particle2.y, 2))
-								- particle.r - particle2.r;
-						distance3 = Math.sqrt(
-								Math.pow(particle.x - particle2.x, 2) + Math.pow(particle.y - (particle2.y - L), 2))
-								- particle.r - particle2.r;
-						distance4 = Math.sqrt(
-								Math.pow(particle.x - particle2.x, 2) + Math.pow(particle.y - (particle2.y + L), 2))
-								- particle.r - particle2.r;
+						distance1 = getDistance(particle, particle2, -1, 0);
+						distance2 = getDistance(particle, particle2, 1, 0);
+						distance3 = getDistance(particle, particle2, 0, -1);
+						distance4 = getDistance(particle, particle2, 0, 1);
 
 						double min = Math.min(distance1, Math.min(distance2, Math.min(distance3, distance4)));
 
@@ -192,30 +188,27 @@ public class CellIndexMethod {
 		return cim;
 	}
 
+	public static void prettyPrint(Map<Particle, Set<Particle>> map) {
+		for (Particle p : map.keySet()) {
+			System.out.println("Particle n: " + p.id);
+			for (Particle neighbor : map.get(p)) {
+				System.out.println("\tNeighbor: " + neighbor.id);
+			}
+		}
+	}
+
 	public static void main(String[] args) {
 
 		CellIndexMethod cim = load();
 		if (cim == null) {
 			return;
 		}
-
-		// Map<Particle, Set<Particle>> neighbors = cim.findNeighbors();
-		//
-		// for (Particle p : neighbors.keySet()) {
-		// System.out.println("Particle n: " + p.id);
-		// for (Particle n : neighbors.get(p)) {
-		// System.out.println("\tNeighbor: " + n.id);
-		// }
-		// }
-
+		
+		Map<Particle, Set<Particle>> neighborsBF = cim.findNeighborsBruteForce();
+		prettyPrint(neighborsBF);
+		System.out.println("---------------------------");
 		Map<Particle, Set<Particle>> neighbors = cim.findNeighbors();
-
-		for (Particle p : neighbors.keySet()) {
-			System.out.println("Particle n: " + p.id);
-			for (Particle n : neighbors.get(p)) {
-				System.out.println("\tNeighbor: " + n.id);
-			}
-		}
+		prettyPrint(neighbors);
 
 	}
 
