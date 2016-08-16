@@ -56,10 +56,11 @@ public class Main {
 
 	public static void prettyPrint(Map<Particle, Set<Particle>> map) {
 		for (Particle p : map.keySet()) {
-			System.out.println("Particle n: " + p.id);
+			System.out.print(p.id + " ");
 			for (Particle neighbor : map.get(p)) {
-				System.out.println("\tNeighbor: " + neighbor.id);
+				System.out.print(neighbor.id + " ");
 			}
+			System.out.println();
 		}
 	}
 
