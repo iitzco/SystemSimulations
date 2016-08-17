@@ -1,3 +1,5 @@
+package itba.ss;
+
 import java.awt.Point;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,6 +29,13 @@ public class CellIndexMethod {
 	int N;
 	int M;
 	boolean contour;
+
+	public CellIndexMethod(int L, int M, double rc, boolean contour) {
+		this.L = L;
+		this.rc = rc;
+		this.contour = contour;
+		this.M = M;
+	}
 
 	private void addNeighbors(Cell c, Particle p, Map<Particle, Set<Particle>> m, int deltaX, int deltaY) {
 		for (Particle candidate : c.set) {

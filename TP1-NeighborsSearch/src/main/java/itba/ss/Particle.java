@@ -1,14 +1,13 @@
+package itba.ss;
 public class Particle {
-
-		static int count = 1;
 
 		int id;
 		double x;
 		double y;
 		double r;
 
-		public Particle(double x, double y, double r) {
-			this.id = count++;
+		public Particle(int id, double x, double y, double r) {
+			this.id = id;
 			this.x = x;
 			this.y = y;
 			this.r = r;

@@ -7,8 +7,8 @@ ax = plt.axes()
 
 points_with_annotation = []
 
-if len(sys.argv)<3:
-    print("Missing files. Must run: python plot.py points_filename neighbors_filename")
+if len(sys.argv)<4:
+    print("Missing files. Must run: python plot.py points_filename neighbors_filename limit")
     exit()
 
 points_filename = sys.argv[1]
@@ -16,7 +16,8 @@ neighbors_filename = sys.argv[2]
 
 f = open(points_filename, 'r')
 particles_count = int(f.readline())
-limit = float(f.readline())
+f.readline()
+limit = float(sys.argv[3])
 
 arr = [ line[:-1].split() for line in f.readlines()]
 points = {int(l[0]): plt.Circle((float(l[1]), float(l[2])), float(l[3]), color = 'b') for l in arr}
