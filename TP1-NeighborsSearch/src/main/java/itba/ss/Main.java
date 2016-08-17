@@ -3,6 +3,7 @@ package itba.ss;
 import java.awt.Point;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -14,7 +15,7 @@ public class Main {
 			throws FileNotFoundException {
 
 		Scanner scanner = new Scanner(new File(file));
-		CellIndexMethod cim = new CellIndexMethod(L,M,rc,contour);
+		CellIndexMethod cim = new CellIndexMethod(L, M, rc, contour);
 
 		cim.N = scanner.nextInt();
 		scanner.nextLine();
@@ -59,8 +60,15 @@ public class Main {
 	public static void prettyPrint(Map<Particle, Set<Particle>> map) {
 		for (Particle p : map.keySet()) {
 			System.out.print(p.id + " ");
+			Integer[] arr = new Integer[map.get(p).size()];
+			int index = 0;
 			for (Particle neighbor : map.get(p)) {
-				System.out.print(neighbor.id + " ");
+				arr[index] = neighbor.id;
+				index++;
+			}
+			Arrays.sort(arr);
+			for (Integer integer : arr) {
+				System.out.print(integer + " ");
 			}
 			System.out.println();
 		}
@@ -86,7 +94,7 @@ public class Main {
 				double R = Double.valueOf(args[3]);
 				generateOvitoInput(N, L, R);
 			} catch (Exception e) {
-				System.err.println("Error in parameters. Must provide: find L M rc contour OR gen N L R");
+				System.err.println("Error in parameters. Must provide: find L M rc contour brute file OR gen N L R");
 			}
 		} else if (option.equals("find")) {
 			try {
@@ -94,16 +102,23 @@ public class Main {
 				int M = Integer.valueOf(args[2]);
 				double rc = Double.valueOf(args[3]);
 				boolean contour = Integer.valueOf(args[4]) != 0;
-				String file = args[5];
+				boolean brute_force = Integer.valueOf(args[5]) != 0;
+				String file = args[6];
 				CellIndexMethod cim = load(L, M, rc, contour, file);
 				if (cim == null) {
 					return;
 				}
-				Map<Particle, Set<Particle>> neighborsBF = cim.findNeighborsBruteForce();
+				Map<Particle, Set<Particle>> neighborsBF;
+				long time = System.currentTimeMillis();
+				if (brute_force)
+					neighborsBF = cim.findNeighborsBruteForce();
+				else
+					neighborsBF = cim.findNeighbors();
+				System.err.println("Execution time: " + (System.currentTimeMillis() - time));
 				prettyPrint(neighborsBF);
 			} catch (Exception e) {
 				e.printStackTrace();
-				System.err.println("Error in parameters. Must provide: find L M rc contour file OR gen N L R");
+				System.err.println("Error in parameters. Must provide: find L M rc contour brute file OR gen N L R");
 			}
 		} else {
 			System.err.println("Must provide gen or find");

@@ -6,19 +6,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/*
- * Example input:
-10
-1
-0.25
-4
-1 1 1
-1 1 1
-1 1 1
-1 1 1
-1
- */
-
 public class CellIndexMethod {
 
 	Cell[][] matrix;
@@ -41,8 +28,7 @@ public class CellIndexMethod {
 		for (Particle candidate : c.set) {
 			if (!candidate.equals(p)) {
 				if (!m.get(p).contains(candidate)) {
-					double distance = Math.sqrt(Math.pow(p.x - (candidate.x + deltaX * L), 2)
-							+ Math.pow(p.y - (candidate.y + deltaY * L), 2)) - p.r - candidate.r;
+					double distance = Math.max(getDistance(p, candidate, deltaX, deltaY), 0);
 					if (distance <= rc) {
 						m.get(p).add(candidate);
 						if (!m.containsKey(candidate))
@@ -66,32 +52,32 @@ public class CellIndexMethod {
 			aux = matrix[coords.x][coords.y];
 			addNeighbors(aux, particle, map, 0, 0);
 
-			aux = matrix[(coords.x - 1) % M][coords.y];
+			aux = matrix[(coords.x - 1 + M) % M][coords.y];
 			if (coords.x - 1 >= 0) {
 				addNeighbors(aux, particle, map, 0, 0);
 			} else if (contour) {
 				addNeighbors(aux, particle, map, -1, 0);
 			}
 
-			aux = matrix[(coords.x - 1) % M][(coords.y + 1) % M];
+			aux = matrix[(coords.x - 1 + M) % M][(coords.y + 1) % M];
 			if (coords.x - 1 >= 0 && coords.y + 1 < M) {
 				addNeighbors(aux, particle, map, 0, 0);
 			} else if (contour) {
-				addNeighbors(aux, particle, map, coords.x - 1 >= 0 ? 0 : -1, coords.y + 1 < M ? 0 : -1);
+				addNeighbors(aux, particle, map, coords.x - 1 >= 0 ? 0 : -1, coords.y + 1 < M ? 0 : 1);
 			}
 
 			aux = matrix[coords.x][(coords.y + 1) % M];
 			if (coords.y + 1 < M) {
 				addNeighbors(aux, particle, map, 0, 0);
 			} else if (contour) {
-				addNeighbors(aux, particle, map, 0, -1);
+				addNeighbors(aux, particle, map, 0, 1);
 			}
 
 			aux = matrix[(coords.x + 1) % M][(coords.y + 1) % M];
 			if (coords.x + 1 < M && coords.y + 1 < M) {
 				addNeighbors(aux, particle, map, 0, 0);
 			} else if (contour) {
-				addNeighbors(aux, particle, map, coords.x + 1 < M ? 0 : 1, coords.y + 1 < M ? 0 : -1);
+				addNeighbors(aux, particle, map, coords.x + 1 < M ? 0 : 1, coords.y + 1 < M ? 0 : 1);
 			}
 
 		}
@@ -114,7 +100,7 @@ public class CellIndexMethod {
 
 			for (Particle particle2 : allParticles.keySet()) {
 				if (!particle.equals(particle2) && !map.get(particle).contains(particle2)) {
-					double distance = getDistance(particle, particle2, 0, 0);
+					double distance = Math.max(getDistance(particle, particle2, 0, 0), 0);
 
 					if (contour) {
 						double distance1, distance2, distance3, distance4;
@@ -125,7 +111,7 @@ public class CellIndexMethod {
 
 						double min = Math.min(distance1, Math.min(distance2, Math.min(distance3, distance4)));
 
-						distance = Math.min(distance, min);
+						distance = Math.max(Math.min(distance, min), 0);
 					}
 
 					if (distance <= rc) {
