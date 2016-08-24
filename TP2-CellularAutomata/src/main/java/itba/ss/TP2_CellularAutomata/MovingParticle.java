@@ -10,8 +10,4 @@ public class MovingParticle extends Particle{
 		this.speed = speed;
 		this.angle = angle;
 	}
-	
-	
-	
-
 }

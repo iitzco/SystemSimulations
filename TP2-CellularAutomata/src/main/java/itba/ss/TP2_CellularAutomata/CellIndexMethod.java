@@ -29,12 +29,16 @@ public class CellIndexMethod {
 	public void loadNewData(Set<? extends Particle> l) {
 		this.allParticles = new HashMap<>();
 		double maxRad = 0;
+		
+		for (int i = 0; i < M; i++) {
+			for (int j = 0; j < M; j++) {
+				matrix[i][j] = new Cell();
+			}
+		}
 
 		for (Particle p : l) {
 			int x = (int) (p.x / this.cellLen);
 			int y = (int) (p.y / this.cellLen);
-			if (this.matrix[x][y] == null)
-				this.matrix[x][y] = new Cell();
 			this.matrix[x][y].set.add(p);
 			this.allParticles.put(p, new Point(x, y));
 			if (maxRad < p.r)

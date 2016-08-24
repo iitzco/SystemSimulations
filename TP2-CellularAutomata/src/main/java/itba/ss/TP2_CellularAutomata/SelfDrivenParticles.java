@@ -3,10 +3,11 @@ package itba.ss.TP2_CellularAutomata;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.SynchronousQueue;
 
 public class SelfDrivenParticles {
 
-	final double SPEED = 0.03;
+	final double SPEED = 1;
 	final double EPSILON = 0.0001;
 
 	Set<MovingParticle> particles;
@@ -51,9 +52,10 @@ public class SelfDrivenParticles {
 				sinSum += Math.sin(mpn.angle);
 				cosSum += Math.cos(mpn.angle);
 			}
-			double aux_angle = Math.atan2(sinSum / set.size(), cosSum / set.size()) + (Math.random() * eta - (eta / 2));
-			double x = p.x + Math.sin(aux_angle) * SPEED;
-			double y = p.y + Math.cos(aux_angle) * SPEED;
+			double aux_angle = Math.atan2(sinSum / (set.size() + 1), cosSum / (set.size() + 1))
+					+ (Math.random() * eta - (eta / 2));
+			double x = p.x + Math.cos(aux_angle) * SPEED;
+			double y = p.y + Math.sin(aux_angle) * SPEED;
 			if (x < 0)
 				x += L;
 			else if (x > L)
@@ -69,18 +71,24 @@ public class SelfDrivenParticles {
 	}
 
 	private void printState(int i) {
-		System.out.println(N);
+		System.out.println(N + 4);
 		System.out.println("t" + i);
 		for (MovingParticle movingParticle : particles) {
-			System.out.println(
-					movingParticle.id + "\t" + movingParticle.x + "\t" + movingParticle.y + "\t" + movingParticle.r);
+			System.out.println(movingParticle.id + "\t" + movingParticle.x + "\t" + movingParticle.y + "\t"
+					+ movingParticle.r + "\t" + Math.cos(movingParticle.angle) + "\t"
+					+ Math.sin(movingParticle.angle));
 		}
+		System.out.println(N + 1 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+		System.out.println(N + 2 + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+		System.out.println(N + 3 + "\t" + 0 + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0);
+		System.out.println(N + 4 + "\t" + L + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0);
 	}
 
 	private Set<MovingParticle> createParticles() {
 		particles = new HashSet<>();
 		for (int i = 0; i < N; i++) {
-			particles.add(new MovingParticle(i + 1, SPEED, Math.random() * 360, Math.random() * L, Math.random() * L));
+			particles.add(new MovingParticle(i + 1, SPEED, (Math.random() * 2 * Math.PI) - Math.PI, Math.random() * L,
+					Math.random() * L));
 		}
 		return particles;
 	}
