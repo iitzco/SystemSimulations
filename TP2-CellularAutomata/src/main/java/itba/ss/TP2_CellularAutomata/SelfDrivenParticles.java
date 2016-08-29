@@ -6,7 +6,6 @@ import java.util.Set;
 
 public class SelfDrivenParticles {
 
-	final double SPEED = 1;
 	final double EPSILON = 0.0001;
 
 	Set<MovingParticle> particles;
@@ -15,16 +14,19 @@ public class SelfDrivenParticles {
 	int N;
 	double rc;
 
+	double speed;
+
 	double eta;
 
 	int iterations;
 
-	public SelfDrivenParticles(double L, double rc, int N, int iterations, double eta) {
+	public SelfDrivenParticles(double L, double rc, int N, int iterations, double eta, double speed) {
 		this.L = L;
 		this.rc = rc;
 		this.N = N;
 		this.iterations = iterations;
 		this.eta = eta;
+		this.speed = speed;
 	}
 
 	public void startSimulation() {
@@ -40,21 +42,18 @@ public class SelfDrivenParticles {
 
 	private void evolve(CellIndexMethod cim) {
 		cim.loadNewData(particles);
-		Map<Particle, Set<Particle>> neighbors = cim.findNeighbors();
+		Map<MovingParticle, Set<MovingParticle>> neighbors = cim.findNeighbors();
 		Set<MovingParticle> newGeneration = new HashSet<>();
 		for (MovingParticle p : particles) {
 			double sinSum = Math.sin(p.angle);
 			double cosSum = Math.cos(p.angle);
-			Set<Particle> set = neighbors.get(p);
-			for (Particle n : set) {
-				MovingParticle mpn = (MovingParticle) n;
-				sinSum += Math.sin(mpn.angle);
-				cosSum += Math.cos(mpn.angle);
+			Set<MovingParticle> set = neighbors.get(p);
+			for (MovingParticle n : set) {
+				sinSum += Math.sin(n.angle);
+				cosSum += Math.cos(n.angle);
 			}
-			double aux_angle = Math.atan2(sinSum / (set.size() + 1), cosSum / (set.size() + 1))
-					+ (Math.random() * eta - (eta / 2));
-			double x = p.x + Math.cos(aux_angle) * SPEED;
-			double y = p.y + Math.sin(aux_angle) * SPEED;
+			double x = p.x + Math.cos(p.angle) * speed;
+			double y = p.y + Math.sin(p.angle) * speed;
 			if (x < 0)
 				x += L;
 			else if (x >= L)
@@ -63,8 +62,10 @@ public class SelfDrivenParticles {
 				y += L;
 			else if (y >= L)
 				y -= L;
+			double aux_angle = Math.atan2(sinSum / (set.size() + 1), cosSum / (set.size() + 1))
+					+ (Math.random() * eta - (eta / 2));
 
-			newGeneration.add(new MovingParticle(p.id, SPEED, aux_angle, x, y));
+			newGeneration.add(new MovingParticle(p.id, speed, aux_angle, x, y));
 		}
 		particles = newGeneration;
 	}
@@ -74,29 +75,31 @@ public class SelfDrivenParticles {
 		System.out.println("t" + i);
 		for (MovingParticle movingParticle : particles) {
 			System.out.println(movingParticle.id + "\t" + movingParticle.x + "\t" + movingParticle.y + "\t"
-					+ Math.cos(movingParticle.angle)*SPEED + "\t" + Math.sin(movingParticle.angle)*SPEED);
+					+ Math.cos(movingParticle.angle) * speed + "\t" + Math.sin(movingParticle.angle) * speed + "\t"
+					+ movingParticle.angle + "\t" + (((255 / (2 * Math.PI)) * movingParticle.angle) + (255 / 2)));
 		}
-		System.out.println(N + 1 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
-		System.out.println(N + 2 + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0);
-		System.out.println(N + 3 + "\t" + 0 + "\t" + L + "\t" + 0 + "\t" + 0);
-		System.out.println(N + 4 + "\t" + L + "\t" + L + "\t" + 0 + "\t" + 0);
+		System.out.println(N + 1 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+		System.out.println(N + 2 + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+		System.out.println(N + 3 + "\t" + 0 + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+		System.out.println(N + 4 + "\t" + L + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
 	}
 
 	private void createParticles() {
 		particles = new HashSet<>();
 		for (int i = 0; i < N; i++) {
-			particles.add(new MovingParticle(i + 1, SPEED, (Math.random() * 2 * Math.PI) - Math.PI, Math.random() * L,
+			particles.add(new MovingParticle(i + 1, speed, (Math.random() * 2 * Math.PI) - Math.PI, Math.random() * L,
 					Math.random() * L));
 		}
 	}
 
 	public static void main(String[] args) {
-		if (args.length < 5) {
-			System.err.println("Must provide L rc N it pert");
+		if (args.length < 6) {
+			System.err.println("Must provide L rc N it pert speed");
 			return;
 		}
 		SelfDrivenParticles selfDrivenParticles = new SelfDrivenParticles(Double.valueOf(args[0]),
-				Double.valueOf(args[1]), Integer.valueOf(args[2]), Integer.valueOf(args[3]), Double.valueOf(args[4]));
+				Double.valueOf(args[1]), Integer.valueOf(args[2]), Integer.valueOf(args[3]), Double.valueOf(args[4]),
+				Double.valueOf(args[5]));
 		selfDrivenParticles.startSimulation();
 	}
 

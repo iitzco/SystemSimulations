@@ -5,7 +5,7 @@ import java.util.Set;
 
 public class Cell {
 
-	Set<Particle> set;
+	Set<MovingParticle> set;
 
 	public Cell() {
 		set = new HashSet<>();
