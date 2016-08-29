@@ -104,18 +104,22 @@ public class SelfDrivenParticles {
 		particles = newGeneration;
 	}
 
+	private double toColor(double component) {
+		return (component + 1) / 2;
+	}
+
 	private void printState(int i) {
 		System.out.println(N + 4);
 		System.out.println("t" + i);
 		for (MovingParticle movingParticle : particles) {
 			System.out.println(movingParticle.id + "\t" + movingParticle.x + "\t" + movingParticle.y + "\t"
 					+ Math.cos(movingParticle.angle) * speed + "\t" + Math.sin(movingParticle.angle) * speed + "\t"
-					+ movingParticle.angle + "\t" + (((255 / (2 * Math.PI)) * movingParticle.angle) + (255 / 2)));
+					+ toColor(Math.sin(movingParticle.angle)) + "\t" + toColor(Math.cos(movingParticle.angle)));
 		}
-		System.out.println(N + 1 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
-		System.out.println(N + 2 + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
-		System.out.println(N + 3 + "\t" + 0 + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
-		System.out.println(N + 4 + "\t" + L + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+		System.out.println(N + 1 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+		System.out.println(N + 2 + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+		System.out.println(N + 3 + "\t" + 0 + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+		System.out.println(N + 4 + "\t" + L + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
 	}
 
 	private void createParticles() {
