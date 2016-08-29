@@ -10,6 +10,8 @@ public class SelfDrivenParticles {
 
 	Set<MovingParticle> particles;
 
+	int AVERAGE_LAST_N;
+
 	double L;
 	int N;
 	double rc;
@@ -27,17 +29,49 @@ public class SelfDrivenParticles {
 		this.iterations = iterations;
 		this.eta = eta;
 		this.speed = speed;
+        this.AVERAGE_LAST_N = (int) (0.1*this.iterations);
 	}
 
-	public void startSimulation() {
+	public double startSimulation(String option) {
+	    double averageVelocity = 0;
+
 		createParticles();
 		CellIndexMethod cim = new CellIndexMethod(L, (int) (Math.floor(L / rc) - EPSILON), rc, true);
-		printState(0);
+        if (option.equals("ovito"))
+            printState(0);
 
 		for (int i = 0; i < iterations; i++) {
 			this.evolve(cim);
-			printState(i + 1);
+
+            if (option.equals("polarization")) {
+				if (i % 5 == 0) {
+					System.out.println(calculateAverageNormalizedVelocity());
+				}
+			}
+
+			if (i >= iterations - AVERAGE_LAST_N) {
+			    averageVelocity += calculateAverageNormalizedVelocity();
+			}
+
+			if (option.equals("ovito"))
+                printState(i + 1);
 		}
+
+		return averageVelocity / AVERAGE_LAST_N;
+	}
+
+	private double calculateAverageNormalizedVelocity() {
+	    double v_x = 0;
+		double v_y = 0;
+
+		for (MovingParticle particle : particles) {
+		    v_x += Math.cos(particle.angle) * speed;
+			v_y += Math.sin(particle.angle) * speed;
+		}
+
+		double vectorModule = Math.sqrt(Math.pow(v_x, 2) + Math.pow(v_y, 2));
+
+		return  vectorModule / (N * speed);
 	}
 
 	private void evolve(CellIndexMethod cim) {
@@ -93,14 +127,32 @@ public class SelfDrivenParticles {
 	}
 
 	public static void main(String[] args) {
-		if (args.length < 6) {
-			System.err.println("Must provide L rc N it pert speed");
+		if (args.length < 7) {
+			System.err.println("Must provide L rc N it pert speed option");
 			return;
 		}
-		SelfDrivenParticles selfDrivenParticles = new SelfDrivenParticles(Double.valueOf(args[0]),
-				Double.valueOf(args[1]), Integer.valueOf(args[2]), Integer.valueOf(args[3]), Double.valueOf(args[4]),
-				Double.valueOf(args[5]));
-		selfDrivenParticles.startSimulation();
+
+		if (args[6].equals("ovito") || args[6].equals("polarization")){
+			SelfDrivenParticles selfDrivenParticles = new SelfDrivenParticles(Double.valueOf(args[0]),
+					Double.valueOf(args[1]), Integer.valueOf(args[2]), Integer.valueOf(args[3]), Double.valueOf(args[4]),
+					Double.valueOf(args[5]));
+			selfDrivenParticles.startSimulation(args[6]);
+		} else if(args[6].equals("times")) {
+			double average = 0;
+			int TIMES = 10;
+			for (int i = 0; i < TIMES; i++) {
+				SelfDrivenParticles selfDrivenParticles = new SelfDrivenParticles(Double.valueOf(args[0]),
+						Double.valueOf(args[1]), Integer.valueOf(args[2]), Integer.valueOf(args[3]), Double.valueOf(args[4]),
+						Double.valueOf(args[5]));
+
+				average += selfDrivenParticles.startSimulation("times");
+			}
+			System.out.println(average / TIMES);
+		}
+        else {
+				System.out.println("Options must be: ovito/times/polarization");
+		}
+
 	}
 
 }
