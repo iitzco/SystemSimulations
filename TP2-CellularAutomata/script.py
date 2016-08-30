@@ -1,12 +1,12 @@
 import os
 import sys
 
-N = 4000
-L= 31.6
+N = 10
+L= 1.28
 rc = 1
-pert = range(0, 56, 4)
+pert = range(0, 52, 2)
 speed = 0.03
-it = 1000
+it = 1500
 
 if len(sys.argv) == 2:
     print('Computing for {}'.format(sys.argv[1]))
