@@ -10,22 +10,24 @@ public class BrownianMovement {
 	boolean interpolate;
 	int iteration;
 
+	Crash crash;
+
 	BrownianMovement(int nParticles, double averageSpeed, double seconds) {
 		this.seconds = seconds;
 		this.iteration = 0;
 		particles = new HashSet<Particle>();
 
-		particles.add(new Particle(0, 0.05, L / 2, L / 2, 0, 0, 100));
+		particles.add(new Particle(0, 0.05, L / 2, L / 2, 0, 0, 1));
 
 		for (int i = 0; i < nParticles; i++) {
 			Particle p = null;
 			do {
-				double x = Math.random() * L;
-				double y = Math.random() * L;
+				double x = Math.random() * (L - 2 * 0.005) + 0.005;
+				double y = Math.random() * (L - 2 * 0.005) + 0.005;
 				double speedX = Math.random() * averageSpeed * 2 - averageSpeed;
 				double speedY = Math.random() * averageSpeed * 2 - averageSpeed;
 				p = new Particle(i + 1, 0.005, x, y, speedX, speedY, 0.1);
-			} while (!overlap(p));
+			} while (overlap(p));
 			particles.add(p);
 		}
 	}
@@ -33,7 +35,7 @@ public class BrownianMovement {
 	private boolean overlap(Particle p) {
 		for (Particle particle : particles) {
 			if (Math.sqrt(Math.pow(particle.getX() - p.getX(), 2)
-					+ Math.pow(particle.getY() - p.getY(), 2)) > (particle.getR() + p.getR()))
+					+ Math.pow(particle.getY() - p.getY(), 2)) < (particle.getR() + p.getR()))
 				return true;
 		}
 		return false;
@@ -44,31 +46,26 @@ public class BrownianMovement {
 
 		while (secondsLeft > 0) {
 			Crash nextCrash = getNextCrash();
+			crash = nextCrash;
 			if (nextCrash.getSeconds() > secondsLeft)
 				return;
 			jump(nextCrash.getSeconds());
 			printState(iteration);
+			iteration++;
 			crash(nextCrash);
 			secondsLeft -= nextCrash.getSeconds();
 		}
 	}
 
 	private void jump(double deltaSeconds) {
-		// if (interpolate){
-		//
-		// }
 		for (Particle particle : particles) {
 			particle.move(deltaSeconds);
-//			if (particle.getX() >= L || particle.getX()< 0 || particle.getY() >= L || particle.getY()< 0){
-//				System.out.println();
-//			}
 		}
 	}
 
 	private void printState(int i) {
 		int n = particles.size();
 		System.out.println(n + 4);
-		i++;
 		System.out.println("t" + i);
 		for (Particle movingParticle : particles) {
 			System.out.println(movingParticle.getId() + "\t" + movingParticle.getX() + "\t" + movingParticle.getY()
@@ -125,7 +122,7 @@ public class BrownianMovement {
 			}
 
 			for (Particle b : particles) {
-				if (a.getId() > b.getId()) {
+				if (a.getId() >= b.getId()) {
 					continue;
 				}
 				timeToCrash = timeToCrash(a, b);
