@@ -59,7 +59,9 @@ public class BrownianMovement {
 		// }
 		for (Particle particle : particles) {
 			particle.move(deltaSeconds);
-			if (particle.getX() >= L || particle.getX()< 0 || particle.getY() >= L || particle.getY()< 0)
+//			if (particle.getX() >= L || particle.getX()< 0 || particle.getY() >= L || particle.getY()< 0){
+//				System.out.println();
+//			}
 		}
 	}
 
