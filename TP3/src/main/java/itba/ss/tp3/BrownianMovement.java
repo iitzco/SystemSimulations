@@ -78,7 +78,7 @@ public class BrownianMovement {
 					continue;
 				}
 				timeToCrash = timeToCrash(a, b);
-				if (minCrash != null && timeToCrash < minCrash.getSeconds()) {
+				if (minCrash == null || timeToCrash < minCrash.getSeconds()) {
 					minCrash = new Crash(a, b, timeToCrash);
 				}
 			}
