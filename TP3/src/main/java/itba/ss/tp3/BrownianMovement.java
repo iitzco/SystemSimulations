@@ -7,22 +7,36 @@ public class BrownianMovement {
 	double L = 0.5;
 	double seconds;
 	Set<Particle> particles;
+	boolean interpolate;
+	int iteration;
 
 	BrownianMovement(int nParticles, double averageSpeed, double seconds) {
 		this.seconds = seconds;
-
+		this.iteration = 0;
 		particles = new HashSet<Particle>();
 
 		particles.add(new Particle(0, 0.05, L / 2, L / 2, 0, 0, 100));
 
 		for (int i = 0; i < nParticles; i++) {
-			double x = Math.random() * L;
-			double y = Math.random() * L;
-			double speedX = Math.random() * averageSpeed * 2 - averageSpeed;
-			double speedY = Math.random() * averageSpeed * 2 - averageSpeed;
-
-			particles.add(new Particle(i + 1, 0.005, x, y, speedX, speedY, 0.1));
+			Particle p = null;
+			do {
+				double x = Math.random() * L;
+				double y = Math.random() * L;
+				double speedX = Math.random() * averageSpeed * 2 - averageSpeed;
+				double speedY = Math.random() * averageSpeed * 2 - averageSpeed;
+				p = new Particle(i + 1, 0.005, x, y, speedX, speedY, 0.1);
+			} while (!overlap(p));
+			particles.add(p);
 		}
+	}
+
+	private boolean overlap(Particle p) {
+		for (Particle particle : particles) {
+			if (Math.sqrt(Math.pow(particle.getX() - p.getX(), 2)
+					+ Math.pow(particle.getY() - p.getY(), 2)) > (particle.getR() + p.getR()))
+				return true;
+		}
+		return false;
 	}
 
 	public void run() {
@@ -30,20 +44,53 @@ public class BrownianMovement {
 
 		while (secondsLeft > 0) {
 			Crash nextCrash = getNextCrash();
-			if (nextCrash.getSeconds() < secondsLeft)
+			if (nextCrash.getSeconds() > secondsLeft)
 				return;
 			jump(nextCrash.getSeconds());
+			printState(iteration);
 			crash(nextCrash);
+			secondsLeft -= nextCrash.getSeconds();
 		}
 	}
 
 	private void jump(double deltaSeconds) {
+		// if (interpolate){
+		//
+		// }
 		for (Particle particle : particles) {
 			particle.move(deltaSeconds);
 		}
 	}
 
+	private void printState(int i) {
+		int n = particles.size();
+		System.out.println(n + 4);
+		i++;
+		System.out.println("t" + i);
+		for (Particle movingParticle : particles) {
+			System.out.println(movingParticle.getId() + "\t" + movingParticle.getX() + "\t" + movingParticle.getY()
+					+ "\t" + movingParticle.getR() + "\t" + movingParticle.getMass() + "\t" + movingParticle.getSpeedX()
+					+ "\t" + movingParticle.getSpeedY());
+		}
+		System.out.println(n + 1 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+		System.out.println(n + 2 + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+		System.out.println(n + 3 + "\t" + 0 + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+		System.out.println(n + 4 + "\t" + L + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+	}
+
 	private void crash(Crash crash) {
+		if (crash.isWallCrash()) {
+			if (crash.isHorizontalWallCrash()) {
+				crash.getA().invertSpeedX();
+			} else {
+				crash.getA().invertSpeedY();
+			}
+		} else {
+			crash.getA().modifySpeedX(crash.getElasticCrashX() / crash.getA().getMass());
+			crash.getB().modifySpeedX(-crash.getElasticCrashX() / crash.getB().getMass());
+			crash.getA().modifySpeedY(crash.getElasticCrashY() / crash.getA().getMass());
+			crash.getB().modifySpeedY(-crash.getElasticCrashY() / crash.getB().getMass());
+		}
 
 	}
 
@@ -70,7 +117,8 @@ public class BrownianMovement {
 			double timeToCrash = Math.min(crashHorizontalWall, crashVerticalWall);
 
 			if (minCrash == null || timeToCrash < minCrash.getSeconds()) {
-				minCrash = new Crash(a, timeToCrash);
+				minCrash = new Crash(a, timeToCrash,
+						crashHorizontalWall < crashVerticalWall ? Wall.HORIZONTAL : Wall.VERTICAL);
 			}
 
 			for (Particle b : particles) {
@@ -83,12 +131,9 @@ public class BrownianMovement {
 				}
 			}
 		}
-
+//		System.out.println("MIN " + minCrash.getSeconds() + " A " + minCrash.getA().toString() + " B "
+//				+ minCrash.getB().toString());
 		return minCrash;
-	}
-
-	public static void main(String[] args) {
-		return;
 	}
 
 	public static double timeToCrash(Particle a, Particle b) {
@@ -115,5 +160,20 @@ public class BrownianMovement {
 		}
 
 		return -(vr + Math.sqrt(d)) / vv;
+	}
+
+	public static void main(String[] args) {
+		if (args.length < 3) {
+			System.err.println("Must provide N[int] avgSpeed[double] seconds[double]");
+			return;
+		}
+		try {
+			BrownianMovement brownianMovement = new BrownianMovement(Integer.valueOf(args[0]), Double.valueOf(args[1]),
+					Double.valueOf(args[2]));
+			brownianMovement.run();
+		} catch (NumberFormatException e) {
+			System.err.println("Must provide N[int] avgSpeed[double] seconds[double]");
+		}
+
 	}
 }
