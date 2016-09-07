@@ -54,11 +54,13 @@ public class BrownianMovement {
 
 			double crashVerticalWall = Double.MAX_VALUE;
 			double crashHorizontalWall = Double.MAX_VALUE;
+
 			if (a.getSpeedX() > 0) {
 				crashHorizontalWall = (this.L - a.getR() - a.getX()) / a.getSpeedX();
 			} else if (a.getSpeedX() < 0) {
 				crashHorizontalWall = (0 + a.getR() - a.getX()) / a.getSpeedX();
 			}
+
 			if (a.getSpeedY() > 0) {
 				crashVerticalWall = (this.L - a.getR() - a.getY()) / a.getSpeedY();
 			} else if (a.getSpeedY() < 0) {
@@ -66,6 +68,7 @@ public class BrownianMovement {
 			}
 
 			double timeToCrash = Math.min(crashHorizontalWall, crashVerticalWall);
+
 			if (minCrash == null || timeToCrash < minCrash.getSeconds()) {
 				minCrash = new Crash(a, timeToCrash);
 			}
