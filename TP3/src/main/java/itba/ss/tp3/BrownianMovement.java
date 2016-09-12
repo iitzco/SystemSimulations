@@ -1,6 +1,8 @@
 package itba.ss.tp3;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.jscience.physics.amount.Constants;
@@ -12,10 +14,14 @@ public class BrownianMovement {
 	Particle bigParticle;
 	boolean interpolate;
 	int iteration;
+	int thirdSectionIteration;
+	Map<Particle, Double> speeds;
 
 	BrownianMovement(int nParticles, double averageSpeed, double seconds) {
 		this.seconds = seconds;
 		this.iteration = 0;
+		this.thirdSectionIteration = 0;
+		speeds = new HashMap<Particle, Double>();
 		particles = new HashSet<Particle>();
 
 		bigParticle = new Particle(0, 0.05, L / 2, L / 2, 0, 0, 1);
@@ -50,8 +56,12 @@ public class BrownianMovement {
 
 		while (secondsLeft > 0) {
 			Crash nextCrash = getNextCrash();
-			if (nextCrash.getSeconds() > secondsLeft)
+			if (nextCrash.getSeconds() > secondsLeft) {
+				if (option == 2) {
+					printSpeeds();
+				}
 				return;
+			}
 			if (option == 1) {
 				System.out.println(nextCrash.getSeconds());
 			}
@@ -59,8 +69,9 @@ public class BrownianMovement {
 			if (option == 0) {
 				printState(iteration);
 			}
+			double auxTime = this.seconds - secondsLeft + nextCrash.getSeconds();
 			if (option == 3) {
-				double auxTime = this.seconds - secondsLeft + nextCrash.getSeconds();
+
 				int index = (int) Math.floor((auxTime / this.seconds) * buckets);
 				while (index >= 0 && !secondsBuckets[index]) {
 					calculateBigParticlePosition(auxTime - (index * this.seconds / buckets));
@@ -68,9 +79,27 @@ public class BrownianMovement {
 					index--;
 				}
 			}
+			if (option == 2 && auxTime < (1 / 3.0) * this.seconds) {
+				thirdSectionIteration++;
+				incrementSpeeds();
+			}
 			iteration++;
 			crash(nextCrash);
 			secondsLeft -= nextCrash.getSeconds();
+		}
+	}
+
+	private void printSpeeds() {
+		for (Double d : speeds.values()) {
+			System.out.println(d / thirdSectionIteration);
+		}
+	}
+
+	private void incrementSpeeds() {
+		for (Particle p : particles) {
+			if (!speeds.containsKey(p))
+				speeds.put(p, new Double(0));
+			speeds.put(p, speeds.get(p) + Math.sqrt(Math.pow(p.getSpeedX(), 2) + Math.pow(p.getSpeedY(), 2)));
 		}
 	}
 
@@ -78,7 +107,7 @@ public class BrownianMovement {
 		double ret = 0;
 		for (Particle p : particles) {
 			double squaredV = Math.pow(p.getSpeedX(), 2) + Math.pow(p.getSpeedY(), 2);
-			ret += (squaredV * p.getMass()) / Constants.k.getEstimatedValue();
+			ret += (squaredV * p.getMass() / 1000) / Constants.k.getEstimatedValue();
 		}
 		return ret;
 	}
@@ -195,7 +224,7 @@ public class BrownianMovement {
 
 	public static void main(String[] args) {
 		if (args.length < 3) {
-			System.err.println("Must provide N[int] avgSpeed[double] seconds[double] option[0|1|2]");
+			System.err.println("Must provide N[int] avgSpeed[double] seconds[double] option[0|1|2|3]");
 			return;
 		}
 		try {
@@ -205,7 +234,7 @@ public class BrownianMovement {
 			System.err.println(brownianMovement.getTemperature());
 			brownianMovement.run(option);
 		} catch (NumberFormatException e) {
-			System.err.println("Must provide N[int] avgSpeed[double] seconds[double]");
+			System.err.println("Must provide N[int] avgSpeed[double] seconds[double] option[0|1|2|3]");
 		}
 
 	}
