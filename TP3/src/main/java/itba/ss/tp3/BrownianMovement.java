@@ -17,14 +17,14 @@ public class BrownianMovement {
 	int thirdSectionIteration;
 	Map<Particle, Double> speeds;
 
-	BrownianMovement(int nParticles, double averageSpeed, double seconds) {
+	BrownianMovement(int nParticles, double averageSpeed, double seconds, double bigParticleMass) {
 		this.seconds = seconds;
 		this.iteration = 0;
 		this.thirdSectionIteration = 0;
 		speeds = new HashMap<Particle, Double>();
 		particles = new HashSet<Particle>();
 
-		bigParticle = new Particle(0, 0.05, L / 2, L / 2, 0, 0, 1);
+		bigParticle = new Particle(0, 0.05, L / 2, L / 2, 0, 0, bigParticleMass);
 		particles.add(bigParticle);
 
 		for (int i = 0; i < nParticles; i++) {
@@ -232,18 +232,18 @@ public class BrownianMovement {
 	}
 
 	public static void main(String[] args) {
-		if (args.length < 3) {
-			System.err.println("Must provide N[int] avgSpeed[double] seconds[double] option[0|1|2|3]");
+		if (args.length < 5) {
+			System.err.println("Must provide N[int] avgSpeed[double] seconds[double] mass[double] option[0|1|2|3]");
 			return;
 		}
 		try {
-			int option = Integer.valueOf(args[3]);
+			int option = Integer.valueOf(args[4]);
 			BrownianMovement brownianMovement = new BrownianMovement(Integer.valueOf(args[0]), Double.valueOf(args[1]),
-					Double.valueOf(args[2]));
+					Double.valueOf(args[2]), Double.valueOf(args[3]));
 			System.err.println(brownianMovement.getTemperature());
 			brownianMovement.run(option);
 		} catch (NumberFormatException e) {
-			System.err.println("Must provide N[int] avgSpeed[double] seconds[double] option[0|1|2|3]");
+			System.err.println("Must provide N[int] avgSpeed[double] seconds[double] mass[double] option[0|1|2|3]");
 		}
 
 	}
