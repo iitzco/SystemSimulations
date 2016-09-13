@@ -54,6 +54,9 @@ public class BrownianMovement {
 		int buckets = 10;
 		boolean[] secondsBuckets = new boolean[buckets];
 
+		double spf = 0.04; // equals 25 fps.
+		int frame = 0;
+
 		while (secondsLeft > 0) {
 			Crash nextCrash = getNextCrash();
 			if (nextCrash.getSeconds() > secondsLeft) {
@@ -66,20 +69,25 @@ public class BrownianMovement {
 				System.out.println(nextCrash.getSeconds());
 			}
 			jump(nextCrash.getSeconds());
+			double currentTime = this.seconds - secondsLeft + nextCrash.getSeconds();
 			if (option == 0) {
-				printState(iteration);
-			}
-			double auxTime = this.seconds - secondsLeft + nextCrash.getSeconds();
-			if (option == 3) {
+				int currentFrame = (int) Math.floor(currentTime / spf);
+				while (frame < currentFrame) {
+					printState(frame, currentTime - frame * spf);
+					frame++;
 
-				int index = (int) Math.floor((auxTime / this.seconds) * buckets);
+				}
+			}
+			if (option == 3) {
+				int index = (int) Math.floor((currentTime / this.seconds) * buckets);
+
 				while (index >= 0 && !secondsBuckets[index]) {
-					calculateBigParticlePosition(auxTime - (index * this.seconds / buckets));
+					calculateBigParticlePosition(currentTime - (index * this.seconds / buckets));
 					secondsBuckets[index] = true;
 					index--;
 				}
 			}
-			if (option == 2 && auxTime < (1 / 3.0) * this.seconds) {
+			if (option == 2 && currentTime < (1 / 3.0) * this.seconds) {
 				thirdSectionIteration++;
 				incrementSpeeds();
 			}
@@ -125,14 +133,15 @@ public class BrownianMovement {
 		}
 	}
 
-	private void printState(int i) {
+	private void printState(int i, double d) {
 		int n = particles.size();
 		System.out.println(n + 4);
 		System.out.println("t" + i);
 		for (Particle movingParticle : particles) {
-			System.out.println(movingParticle.getId() + "\t" + movingParticle.getX() + "\t" + movingParticle.getY()
-					+ "\t" + movingParticle.getR() + "\t" + movingParticle.getMass() + "\t" + movingParticle.getSpeedX()
-					+ "\t" + movingParticle.getSpeedY());
+			double x = movingParticle.getX() - (movingParticle.getSpeedX() * d);
+			double y = movingParticle.getY() - (movingParticle.getSpeedY() * d);
+			System.out.println(movingParticle.getId() + "\t" + x + "\t" + y + "\t" + movingParticle.getR() + "\t"
+					+ movingParticle.getMass() + "\t" + movingParticle.getSpeedX() + "\t" + movingParticle.getSpeedY());
 		}
 		System.out.println(n + 1 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
 		System.out.println(n + 2 + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
