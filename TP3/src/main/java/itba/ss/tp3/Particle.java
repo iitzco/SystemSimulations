@@ -109,6 +109,10 @@ public class Particle {
 		this.speedY += d;
 	}
 
+	public double getAbsoluteSpeed() {
+		return Math.sqrt(Math.pow(this.speedX, 2) + Math.pow(this.speedY, 2));
+	}
+
 	@Override
 	public String toString() {
 		return String.format("[(%f, %f) - (%f, %f) - %f]", x, y, speedX, speedY, r);

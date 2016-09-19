@@ -137,16 +137,23 @@ public class BrownianMovement {
 		int n = particles.size();
 		System.out.println(n + 4);
 		System.out.println("t" + i);
+		double maxSpeed = 0;
+		for (Particle particle : particles) {
+			double aux = particle.getAbsoluteSpeed();
+			if (aux > maxSpeed)
+				maxSpeed = aux;
+		}
 		for (Particle movingParticle : particles) {
 			double x = movingParticle.getX() - (movingParticle.getSpeedX() * d);
 			double y = movingParticle.getY() - (movingParticle.getSpeedY() * d);
+			double speedAux = movingParticle.getAbsoluteSpeed() / maxSpeed;
 			System.out.println(movingParticle.getId() + "\t" + x + "\t" + y + "\t" + movingParticle.getR() + "\t"
-					+ movingParticle.getMass() + "\t" + movingParticle.getSpeedX() + "\t" + movingParticle.getSpeedY());
+					+ movingParticle.getMass() + "\t" + speedAux + "\t" + (1 - speedAux) + "\t" + 1);
 		}
-		System.out.println(n + 1 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
-		System.out.println(n + 2 + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
-		System.out.println(n + 3 + "\t" + 0 + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
-		System.out.println(n + 4 + "\t" + L + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+		System.out.println(n + 1 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+		System.out.println(n + 2 + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+		System.out.println(n + 3 + "\t" + 0 + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+		System.out.println(n + 4 + "\t" + L + "\t" + L + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
 	}
 
 	private void crash(Crash crash) {
