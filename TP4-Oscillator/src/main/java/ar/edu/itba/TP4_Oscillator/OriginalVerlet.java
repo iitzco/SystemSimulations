@@ -12,20 +12,24 @@ public class OriginalVerlet implements IntegralMethod {
 	}
 
 	public Particle moveParticle(Particle p, double time) {
-		Particle nextP = new Particle(p.getId(), p.getR(), p.getX(), p.getY(), p.getMass());
+		Particle nextP = new Particle(p.id, p.r, p.x, p.y, p.mass);
 		setPositions(nextP, p, time);
 		setSpeeds(nextP, p);
 		return nextP;
 	}
 
 	private void setSpeeds(Particle nextP, Particle p) {
-		nextP.setSpeedX((nextP.getX() - p.getPrevX()) / (2 * deltaT));
-		nextP.setSpeedY((nextP.getY() - p.getPrevY()) / (2 * deltaT));
+		nextP.speedX = (nextP.x - p.prevX) / (2 * deltaT);
+		nextP.speedY = (nextP.y - p.prevY) / (2 * deltaT);
 	}
 
 	private void setPositions(Particle nextP, Particle p, double time) {
-		nextP.setX(2 * p.getX() - p.getPrevX() + (Math.pow(deltaT, 2) / p.getMass()) * accelerator.getForceX(time, p));
-		nextP.setY(2 * p.getY() - p.getPrevY() + (Math.pow(deltaT, 2) / p.getMass()) * accelerator.getForceY(time, p));
+		nextP.x = 2 * p.x - p.prevX + (Math.pow(deltaT, 2) / p.mass) * accelerator.getForceX(time, p);
+		nextP.y = 2 * p.y - p.prevY + (Math.pow(deltaT, 2) / p.mass) * accelerator.getForceY(time, p);
+	}
+
+	public String getName() {
+		return "Original Verlet";
 	}
 
 }

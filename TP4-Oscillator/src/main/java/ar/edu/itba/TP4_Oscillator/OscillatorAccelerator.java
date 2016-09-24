@@ -1,10 +1,9 @@
 package ar.edu.itba.TP4_Oscillator;
 
-public class OscillatorAccelerator implements Accelerator{
-	
+public class OscillatorAccelerator implements Accelerator {
+
 	private double k;
 	private double g;
-
 
 	public OscillatorAccelerator(double k, double g) {
 		super();
@@ -13,11 +12,11 @@ public class OscillatorAccelerator implements Accelerator{
 	}
 
 	public double getForceX(double time, Particle p) {
-		return -k*p.getX()  - g*p.getSpeedX();
+		return -k * p.x - g * p.speedX;
 	}
 
 	public double getForceY(double time, Particle p) {
-		return -k*p.getY()  - g*p.getSpeedY();
+		return -k * p.y - g * p.speedY;
 	}
 
 }
