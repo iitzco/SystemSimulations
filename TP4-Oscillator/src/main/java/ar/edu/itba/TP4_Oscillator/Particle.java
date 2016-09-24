@@ -16,6 +16,9 @@ public class Particle {
 	double prevSpeedY;
 
 	final double mass;
+	
+	double[] rListX = new double[6];
+	double[] rListY = new double[6];
 
 	public Particle(int id, double r, double x, double y, double prevX, double prevY, double speedX, double speedY,
 			double prevSpeedX, double prevSpeedY, double mass) {

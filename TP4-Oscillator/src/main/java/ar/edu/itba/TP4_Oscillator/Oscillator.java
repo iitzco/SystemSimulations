@@ -35,6 +35,15 @@ public class Oscillator {
 		p.prevSpeedY = 0;
 	}
 
+	private void initializeR() {
+		p.rListX[0] = p.x;
+		p.rListX[1] = p.speedX;
+		p.rListX[2] = (accelerator.getForceX(0, p))/p.mass;
+		p.rListX[3] = -(k / m) * p.rListX[1] - (g / m) * p.rListX[2];
+		p.rListX[4] = -(k / m) * p.rListX[2] - (g / m) * p.rListX[3];
+		p.rListX[5] = -(k / m) * p.rListX[3] - (g / m) * p.rListX[4];
+	}
+
 	public static void run(List<Oscillator> list, double tf, double deltaT) {
 		double currentTime = 0;
 		for (Oscillator oscillator : list) {
@@ -63,6 +72,7 @@ public class Oscillator {
 		Accelerator accelerator = new OscillatorAccelerator(k, g);
 		IntegralMethod verlet = new OriginalVerlet(deltaT, accelerator);
 		IntegralMethod beeman = new Beeman(deltaT, accelerator);
+		IntegralMethod gear = new GearMethod(deltaT, accelerator);
 		IntegralMethod analitic = new AnaliticMethod(k, g);
 
 		Oscillator verletOscillator = new Oscillator(accelerator, verlet, k, g, m, tf, deltaT);
@@ -71,14 +81,19 @@ public class Oscillator {
 		Oscillator beemanOscillator = new Oscillator(accelerator, beeman, k, g, m, tf, deltaT);
 		beemanOscillator.regressParticle();
 
+		Oscillator gearOscillator = new Oscillator(accelerator, gear, k, g, m, tf, deltaT);
+		gearOscillator.initializeR();
+
 		Oscillator analiticOscillator = new Oscillator(accelerator, analitic, k, g, m, tf, deltaT);
 
 		List<Oscillator> l = new LinkedList<Oscillator>();
 		l.add(verletOscillator);
-		l.add(analiticOscillator);
 		l.add(beemanOscillator);
+		l.add(gearOscillator);
+		l.add(analiticOscillator);
 
 		run(l, tf, deltaT);
 
 	}
+
 }
