@@ -1,4 +1,4 @@
-package ar.edu.itba.TP4_LennardJonesGas;
+package itba.ss.TP4_MarsTravel;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
