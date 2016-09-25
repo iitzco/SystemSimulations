@@ -12,6 +12,8 @@ public class Oscillator {
 	double m;
 	double deltaT;
 
+	final static double EPSILON = 0.000001;
+
 	Particle p;
 
 	public Oscillator(Accelerator accelerator, IntegralMethod integralMethod, double k, double g, double m, double tf,
@@ -38,26 +40,95 @@ public class Oscillator {
 	private void initializeR() {
 		p.rListX[0] = p.x;
 		p.rListX[1] = p.speedX;
-		p.rListX[2] = (accelerator.getForceX(0, p))/p.mass;
+		p.rListX[2] = (accelerator.getForceX(0, p)) / p.mass;
 		p.rListX[3] = -(k / m) * p.rListX[1] - (g / m) * p.rListX[2];
 		p.rListX[4] = -(k / m) * p.rListX[2] - (g / m) * p.rListX[3];
 		p.rListX[5] = -(k / m) * p.rListX[3] - (g / m) * p.rListX[4];
 	}
 
-	public static void run(List<Oscillator> list, double tf, double deltaT) {
+	public static void runWithErrors(Oscillator analiticOscillator, List<Oscillator> list, double tf, double deltaT) {
+
 		double currentTime = 0;
+
+		double[] errors = new double[3];
+
 		for (Oscillator oscillator : list) {
 			System.out.print(oscillator.integralMethod.getName() + "\t");
 		}
 		System.out.println();
 		while (currentTime < tf) {
-			for (Oscillator oscillator : list) {
+			analiticOscillator.p = analiticOscillator.integralMethod.moveParticle(analiticOscillator.p, currentTime);
+			for (int i = 0; i < list.size(); i++) {
+				Oscillator oscillator = list.get(i);
+				oscillator.p = oscillator.integralMethod.moveParticle(oscillator.p, currentTime);
+				errors[i] += (Math.pow(analiticOscillator.p.x - oscillator.p.x, 2));
+			}
+			currentTime += deltaT;
+		}
+
+		for (int i = 0; i < errors.length; i++) {
+			errors[i] /= (tf / deltaT);
+			System.out.print(errors[i] + "\t");
+		}
+		System.out.println();
+	}
+
+	public static void runForGraphics(Oscillator analiticOscillator, List<Oscillator> list, double tf, double deltaT) {
+
+		double currentTime = 0;
+
+		for (Oscillator oscillator : list) {
+			System.out.print(oscillator.integralMethod.getName() + "\t");
+		}
+		System.out.print(analiticOscillator.integralMethod.getName());
+		System.out.println();
+		while (currentTime < tf) {
+			analiticOscillator.p = analiticOscillator.integralMethod.moveParticle(analiticOscillator.p, currentTime);
+			for (int i = 0; i < list.size(); i++) {
+				Oscillator oscillator = list.get(i);
 				oscillator.p = oscillator.integralMethod.moveParticle(oscillator.p, currentTime);
 				System.out.print(oscillator.p.x + "\t");
 			}
+			System.out.print(analiticOscillator.p.x + "\t");
 			System.out.println();
 			currentTime += deltaT;
+		}
 
+	}
+
+	public static void runForOvito(Oscillator analiticOscillator, List<Oscillator> list, double tf, double deltaT,
+			double deltaT2) {
+
+		double currentTime = 0;
+
+		int[][] rgb = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
+
+		while (currentTime < tf) {
+			boolean isTimeToPrint = Math.abs(currentTime / deltaT2 - Math.round(currentTime / deltaT2)) < EPSILON;
+			if (isTimeToPrint) {
+				System.out.println(8);
+				System.out.println("t " + Math.round(currentTime / deltaT2));
+			}
+			analiticOscillator.p = analiticOscillator.integralMethod.moveParticle(analiticOscillator.p, currentTime);
+			int i = 0;
+			for (; i < list.size(); i++) {
+				Oscillator oscillator = list.get(i);
+				oscillator.p = oscillator.integralMethod.moveParticle(oscillator.p, currentTime);
+				if (isTimeToPrint) {
+					System.out.println(i + "\t" + oscillator.p.x + "\t" + i + "\t" + 0.4 + "\t" + rgb[i][0] + "\t"
+							+ rgb[i][1] + "\t" + rgb[i][2]);
+				}
+			}
+			if (isTimeToPrint) {
+				System.out.println(
+						i + "\t" + analiticOscillator.p.x + "\t" + i + "\t" + 0.4 + "\t" + 1 + "\t" + 1 + "\t" + 1);
+				System.out.println(i + 1 + "\t" + (-1.5) + "\t" + 3 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+				System.out.println(i + 2 + "\t" + 1.5 + "\t" + 3 + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+				System.out.println(i + 3 + "\t" + (-1.5) + "\t" + (-5) + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+				System.out.println(i + 4 + "\t" + 1.5 + "\t" + (-5) + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + 0);
+			}
+
+			currentTime += deltaT;
 		}
 	}
 
@@ -67,7 +138,12 @@ public class Oscillator {
 		double g = 100;
 		double m = 70;
 		double tf = 5;
-		double deltaT = 0.01;
+		double deltaT = 0.001;
+		double deltaT2 = 0.02;
+
+		// 0 para posiciones en dt, 1 para errores, 2 para Ovito.
+
+		int option = 2;
 
 		Accelerator accelerator = new OscillatorAccelerator(k, g);
 		IntegralMethod verlet = new OriginalVerlet(deltaT, accelerator);
@@ -90,10 +166,20 @@ public class Oscillator {
 		l.add(verletOscillator);
 		l.add(beemanOscillator);
 		l.add(gearOscillator);
-		l.add(analiticOscillator);
 
-		run(l, tf, deltaT);
-
+		switch (option) {
+		case 0:
+			runForGraphics(analiticOscillator, l, tf, deltaT);
+			break;
+		case 1:
+			runWithErrors(analiticOscillator, l, tf, deltaT);
+			break;
+		case 2:
+			runForOvito(analiticOscillator, l, tf, deltaT, deltaT2);
+			break;
+		default:
+			break;
+		}
 	}
 
 }
