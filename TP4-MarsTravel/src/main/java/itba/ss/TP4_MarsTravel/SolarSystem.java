@@ -5,6 +5,12 @@ import java.util.List;
 
 public class SolarSystem {
 
+    final static double YEAR = 3600*24*365;
+    final static double DAY = 3600*24;
+    final static double WEEK = DAY*7;
+
+    final static double LAUNCH_SPEED = 8;
+
 	Accelerator accelerator;
 	IntegralMethod integralMethod;
 
@@ -101,7 +107,7 @@ public class SolarSystem {
 		double y = distanceShipSun * Math.sin(angle);
 		double x = distanceShipSun * Math.cos(angle);
 
-		double speed = (3 + 7.12) * 1000; // (m/s)
+		double speed = (LAUNCH_SPEED + 7.12) * 1000; // (m/s)
 		double speedX = earth.speedX + speed * Math.cos((Math.PI / 2) + angle);
 		double speedY = earth.speedY + speed * Math.sin((Math.PI / 2) + angle);
 
@@ -191,6 +197,7 @@ public class SolarSystem {
 
         double launchTime = 31536000;
 
+        int option = 1;
 		Accelerator accelerator = new GravityAccelerator();
 		IntegralMethod beeman = new Beeman(deltaT, accelerator);
 
@@ -202,8 +209,77 @@ public class SolarSystem {
 		solarSystem.regressParticle(solarSystem.sun, solarSystem.lForSun);
 		solarSystem.regressParticle(solarSystem.mars, solarSystem.lForMars);
 
-		run(solarSystem, tf, deltaT, deltaT2, launchTime);
+        if (option==0) {
+            run(solarSystem, tf, deltaT, deltaT2, launchTime);
+        } else if (option == 1){
+            double t = findLaunchTime(solarSystem, deltaT, accelerator, beeman);
+            System.out.println(t);
+        }
 
 	}
+
+    private static double findLaunchTime(SolarSystem solarSystem, double deltaT, Accelerator accelerator, IntegralMethod beeman) {
+        double ret = 0;
+        for (int i=0; i<3*YEAR; i+=WEEK){
+            ret = runSystem(accelerator, beeman, deltaT, 3*YEAR, i);
+            System.out.println(i/DAY);
+            System.out.println(ret);
+            if (ret != -1){
+                System.out.println("Arrived at "+ret);
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static double runSystem(Accelerator accelerator, IntegralMethod integralMethod, double deltaT, double tf, double launchTime){
+        SolarSystem solarSystem = new SolarSystem(accelerator, integralMethod, deltaT);
+
+        solarSystem.updateLists();
+
+        solarSystem.regressParticle(solarSystem.earth, solarSystem.lForEarth);
+        solarSystem.regressParticle(solarSystem.sun, solarSystem.lForSun);
+        solarSystem.regressParticle(solarSystem.mars, solarSystem.lForMars);
+
+        return runSimulation(solarSystem, deltaT, tf, launchTime);
+
+    }
+
+    private static double runSimulation(SolarSystem solarSystem, double deltaT, double tf, double launchTime) {
+
+        double currentTime = 0;
+
+        while (currentTime < tf) {
+            solarSystem.updateLists();
+
+            if (!solarSystem.launched && Math.abs(currentTime - launchTime) < EPSILON) {
+                solarSystem.launched = true;
+                solarSystem.locateShip();
+            }
+
+            Particle earthAux = solarSystem.integralMethod.moveParticle(solarSystem.earth, solarSystem.lForEarth);
+            Particle sunAux = solarSystem.integralMethod.moveParticle(solarSystem.sun, solarSystem.lForSun);
+            Particle marsAux = solarSystem.integralMethod.moveParticle(solarSystem.mars, solarSystem.lForMars);
+            if (solarSystem.launched){
+                Particle shipAux = solarSystem.integralMethod.moveParticle(solarSystem.ship, solarSystem.lForShip);
+                solarSystem.ship = shipAux;
+            }
+
+            solarSystem.earth = earthAux;
+            solarSystem.mars = marsAux;
+            solarSystem.sun = sunAux;
+
+            if (solarSystem.arrived()){
+                return currentTime;
+            }
+
+            currentTime += deltaT;
+        }
+        return -1;
+    }
+
+    private boolean arrived() {
+        return GravityAccelerator.getDistance(mars, ship) - mars.r - ship.r < 1000000E3;
+    }
 
 }
