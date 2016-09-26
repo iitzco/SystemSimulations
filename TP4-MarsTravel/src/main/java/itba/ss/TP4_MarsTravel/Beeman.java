@@ -1,64 +1,52 @@
 package itba.ss.TP4_MarsTravel;
 
-import java.math.BigDecimal;
-import java.math.MathContext;
 import java.util.List;
 
 public class Beeman implements IntegralMethod {
 
-	private BigDecimal deltaT;
+	private double deltaT;
 	private Accelerator accelerator;
 
-	public Beeman(BigDecimal deltaT, Accelerator accelerator) {
+	public Beeman(double deltaT, Accelerator accelerator) {
 		super();
 		this.deltaT = deltaT;
 		this.accelerator = accelerator;
 	}
 
 	private void setSpeeds(Particle nextP, Particle p, List<Particle> l) {
-		BigDecimal m = p.mass;
+		double m = p.mass;
 
-		Particle previousP = new Particle(p.id, p.r, p.prevX, p.prevY, null, null, p.prevSpeedX, p.prevSpeedY, null,
-				null, p.mass);
-		Particle currP = new Particle(p.id, p.r, nextP.x, nextP.y, null, null, p.speedX, p.speedY, null, null, p.mass);
+		Particle previousP = new Particle(p.id, p.r, p.prevX, p.prevY, 0, 0, p.prevSpeedX, p.prevSpeedY, 0,
+				0, p.mass);
+		Particle currP = new Particle(p.id, p.r, nextP.x, nextP.y, 0, 0, p.speedX, p.speedY, 0, 0, p.mass);
 
 		nextP.speedX = p.speedX
-				.add(new BigDecimal(1.0 / 3)
-						.multiply(accelerator.getForceX(currP, l).divide(m, MathContext.DECIMAL32).multiply(deltaT)))
-				.add(new BigDecimal(5.0 / 6)
-						.multiply(accelerator.getForceX(p, l).divide(m, MathContext.DECIMAL32).multiply(deltaT)))
-				.subtract(new BigDecimal(1.0 / 6).multiply(
-						accelerator.getForceX(previousP, l).divide(m, MathContext.DECIMAL32).multiply(deltaT)));
+				+ (1.0 / 3) * accelerator.getForceX(currP, l) * deltaT / m
+				+ (5.0 / 6) * accelerator.getForceX(p, l) * deltaT / m
+				- (1.0 / 6) * accelerator.getForceX(previousP, l) * deltaT / m;
 
 		nextP.speedY = p.speedY
-				.add(new BigDecimal(1.0 / 3)
-						.multiply(accelerator.getForceY(currP, l).divide(m, MathContext.DECIMAL32).multiply(deltaT)))
-				.add(new BigDecimal(5.0 / 6)
-						.multiply(accelerator.getForceY(p, l).divide(m, MathContext.DECIMAL32).multiply(deltaT)))
-				.subtract(new BigDecimal(1.0 / 6).multiply(
-						accelerator.getForceY(previousP, l).divide(m, MathContext.DECIMAL32).multiply(deltaT)));
-
+				+ (1.0 / 3) * accelerator.getForceY(currP, l) * deltaT / m
+				+ (5.0 / 6) * accelerator.getForceY(p, l) * deltaT / m
+				- (1.0 / 6) * accelerator.getForceY(previousP, l) * deltaT / m;
 	}
 
 	private void setPositions(Particle nextP, Particle p, List<Particle> l) {
-		BigDecimal m = p.mass;
+		double m = p.mass;
 
-		Particle previousP = new Particle(p.id, p.r, p.prevX, p.prevY, null, null, p.prevSpeedX, p.prevSpeedY, null,
-				null, p.mass);
+		Particle previousP = new Particle(p.id, p.r, p.prevX, p.prevY, 0, 0, p.prevSpeedX, p.prevSpeedY, 0,
+				0, p.mass);
 
-		nextP.x = p.x.add(p.speedX.multiply(deltaT))
-				.add(new BigDecimal(2.0 / 3).multiply(accelerator.getForceX(p, l).divide(m, MathContext.DECIMAL32))
-						.multiply(deltaT.pow(2)))
-				.subtract(new BigDecimal(1.0 / 6)
-						.multiply(accelerator.getForceX(previousP, l).divide(m, MathContext.DECIMAL32))
-						.multiply(deltaT.pow(2)));
+//		System.out.println(String.format("getForce %f", accelerator.getForce(p, l)));
+//        System.out.println(String.format("getForceX %f", accelerator.getForceX(p, l)));
 
-		nextP.y = p.y.add(p.speedY.multiply(deltaT))
-				.add(new BigDecimal(2.0 / 3).multiply(accelerator.getForceY(p, l).divide(m, MathContext.DECIMAL32))
-						.multiply(deltaT.pow(2)))
-				.subtract(new BigDecimal(1.0 / 6)
-						.multiply(accelerator.getForceY(previousP, l).divide(m, MathContext.DECIMAL32))
-						.multiply(deltaT.pow(2)));
+		nextP.x = p.x + p.speedX * deltaT
+				+ (2.0 / 3) * accelerator.getForceX(p, l) * Math.pow(deltaT, 2)/ m
+				- (1.0 / 6) * accelerator.getForceX(previousP, l) * Math.pow(deltaT, 2) / m;
+
+		nextP.y = p.y + p.speedY * deltaT
+				+ (2.0 / 3) * accelerator.getForceY(p, l) * Math.pow(deltaT, 2)/ m
+				- (1.0 / 6) * accelerator.getForceY(previousP, l) * Math.pow(deltaT, 2) / m;
 	}
 
 	public String getName() {

@@ -1,29 +1,28 @@
 package itba.ss.TP4_MarsTravel;
 
-import java.math.BigDecimal;
 
 public class Particle {
 	final int id;
-	final BigDecimal r;
+	final double r;
 
-	BigDecimal x;
-	BigDecimal y;
-	BigDecimal prevX;
-	BigDecimal prevY;
+	double x;
+	double y;
+	double prevX;
+	double prevY;
 
-	BigDecimal speedX;
-	BigDecimal speedY;
+	double speedX;
+	double speedY;
 
-	BigDecimal prevSpeedX;
-	BigDecimal prevSpeedY;
+	double prevSpeedX;
+	double prevSpeedY;
 
-	final BigDecimal mass;
+	final double mass;
 
 	double[] rListX = new double[6];
 	double[] rListY = new double[6];
 
-	public Particle(int id, BigDecimal r, BigDecimal x, BigDecimal y, BigDecimal prevX, BigDecimal prevY,
-			BigDecimal speedX, BigDecimal speedY, BigDecimal prevSpeedX, BigDecimal prevSpeedY, BigDecimal mass) {
+	public Particle(int id, double r, double x, double y, double prevX, double prevY,
+			double speedX, double speedY, double prevSpeedX, double prevSpeedY, double mass) {
 		super();
 		this.id = id;
 		this.r = r;
@@ -38,8 +37,8 @@ public class Particle {
 		this.mass = mass;
 	}
 
-	public Particle(int id, BigDecimal r, BigDecimal x, BigDecimal y, BigDecimal prevX, BigDecimal prevY, BigDecimal speedX, BigDecimal speedY,
-			BigDecimal mass) {
+	public Particle(int id, double r, double x, double y, double prevX, double prevY, double speedX, double speedY,
+			double mass) {
 		super();
 		this.id = id;
 		this.r = r;
@@ -52,7 +51,7 @@ public class Particle {
 		this.mass = mass;
 	}
 
-	public Particle(int id, BigDecimal r, BigDecimal x, BigDecimal y, BigDecimal speedX, BigDecimal speedY, BigDecimal mass) {
+	public Particle(int id, double r, double x, double y, double speedX, double speedY, double mass) {
 		super();
 		this.id = id;
 		this.r = r;
@@ -63,7 +62,7 @@ public class Particle {
 		this.mass = mass;
 	}
 
-	public Particle(int id, BigDecimal r, BigDecimal prevX, BigDecimal prevY, BigDecimal mass) {
+	public Particle(int id, double r, double prevX, double prevY, double mass) {
 		super();
 		this.id = id;
 		this.r = r;
