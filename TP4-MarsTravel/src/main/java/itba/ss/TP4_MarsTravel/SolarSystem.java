@@ -16,6 +16,12 @@ public class SolarSystem {
 	Particle earth;
 	Particle ship;
 	Particle mars;
+    List<Particle> lForEarth = new ArrayList<Particle>();
+    List<Particle> lForSun = new ArrayList<Particle>();
+    List<Particle> lForMars = new ArrayList<Particle>();
+    List<Particle> lForShip = new ArrayList<Particle>();
+
+    boolean launched = false;
 
 	public SolarSystem(Accelerator accelerator, IntegralMethod integralMethod, double deltaT) {
 		this.accelerator = accelerator;
@@ -24,6 +30,36 @@ public class SolarSystem {
 
 		initializeCorps();
 	}
+
+	private void updateLists(){
+        this.lForEarth = new ArrayList<Particle>();
+        this.lForEarth.add(sun);
+        this.lForEarth.add(mars);
+
+        this.lForSun = new ArrayList<Particle>();
+        this.lForSun.add(earth);
+        this.lForSun.add(mars);
+
+        this.lForMars = new ArrayList<Particle>();
+        this.lForMars.add(earth);
+        this.lForMars.add(sun);
+
+        if (launched){
+            this.lForShip = new ArrayList<Particle>();
+            this.lForShip.add(earth);
+            this.lForShip.add(sun);
+            this.lForShip.add(mars);
+
+            this.lForMars.add(ship);
+
+            this.lForSun.add(ship);
+
+            this.lForEarth.add(ship);
+
+        }
+
+
+    }
 
 	private void initializeCorps() {
 		earth = new Particle(0,
@@ -48,9 +84,10 @@ public class SolarSystem {
 		);
 
 
-		locateShip();
-
+        locateShip();
 	}
+
+
 
 	private void locateShip() {
 		double distanceSunEarth = GravityAccelerator.getDistance(sun, earth);
@@ -74,6 +111,8 @@ public class SolarSystem {
 				speedX, speedY,
 				2E5
 		);
+
+        regressParticle(ship, lForShip);
 	}
 
 
@@ -95,58 +134,50 @@ public class SolarSystem {
 
 	}
 
-	public static void runForOvito(SolarSystem solarSystem, double tf, double deltaT, double deltaT2) {
+	public static void run(SolarSystem solarSystem, double tf, double deltaT, double deltaT2, double launchTime) {
 
 		double currentTime = 0;
 
 		while (currentTime < tf) {
-			List<Particle> lForEarth = new ArrayList<Particle>();
-			lForEarth.add(solarSystem.sun);
-			lForEarth.add(solarSystem.mars);
-			lForEarth.add(solarSystem.ship);
+            solarSystem.updateLists();
 
-			List<Particle> lForSun = new ArrayList<Particle>();
-			lForSun.add(solarSystem.earth);
-			lForSun.add(solarSystem.mars);
-			lForSun.add(solarSystem.ship);
+            if (!solarSystem.launched && Math.abs(currentTime - launchTime) < EPSILON) {
+                solarSystem.launched = true;
+                solarSystem.locateShip();
+            }
 
-			List<Particle> lForMars = new ArrayList<Particle>();
-			lForMars.add(solarSystem.earth);
-			lForMars.add(solarSystem.sun);
-			lForMars.add(solarSystem.ship);
+            boolean isTimeToPrint = Math.abs(currentTime / deltaT2 - Math.round(currentTime / deltaT2)) < EPSILON;
 
-			List<Particle> lForShip = new ArrayList<Particle>();
-			lForShip.add(solarSystem.earth);
-			lForShip.add(solarSystem.sun);
-			lForShip.add(solarSystem.mars);
+            if (isTimeToPrint) {
+                System.out.println(solarSystem.launched ? 4 : 3);
+                System.out.println("t " + Math.round(currentTime / deltaT2));
+                System.out.println(0 + "\t" + solarSystem.earth.x + "\t"
+                        + solarSystem.earth.y + "\t" + solarSystem.earth.mass + "\t"
+                        + solarSystem.earth.r + "\t" + 0 + "\t" + 0 + "\t" + 1);
+                System.out.println(1 + "\t" + solarSystem.sun.x + "\t" + solarSystem.sun.y
+                        + "\t" + solarSystem.sun.mass + "\t"
+                        + solarSystem.sun.r + "\t" + 1 + "\t" + 1 + "\t" + 0);
+                System.out.println(2 + "\t" + solarSystem.mars.x + "\t" + solarSystem.mars.y
+                        + "\t" + solarSystem.mars.mass + "\t"
+                        + solarSystem.mars.r + "\t" + 1 + "\t" + 0 + "\t" + 0);
+                if (solarSystem.launched) {
+                    System.out.println(3 + "\t" + solarSystem.ship.x + "\t" + solarSystem.ship.y
+                            + "\t" + solarSystem.ship.mass + "\t"
+                            + solarSystem.ship.r + "\t" + 1 + "\t" + 1 + "\t" + 1);
+                }
+            }
 
-			boolean isTimeToPrint = Math.abs(currentTime/deltaT2 - Math.round(currentTime/deltaT2)) < EPSILON;
 
-			if (isTimeToPrint) {
-				System.out.println(4);
-				System.out.println("t " + Math.round(currentTime / deltaT2));
-				System.out.println(0 + "\t" + solarSystem.earth.x + "\t"
-						+ solarSystem.earth.y + "\t" + solarSystem.earth.mass + "\t"
-						+ solarSystem.earth.r + "\t" + 0 + "\t" + 0 + "\t" + 1);
-				System.out.println(1 + "\t" + solarSystem.sun.x + "\t" + solarSystem.sun.y
-						+ "\t" + solarSystem.sun.mass + "\t"
-						+ solarSystem.sun.r + "\t" + 1 + "\t" + 1 + "\t" + 0);
-				System.out.println(2 + "\t" + solarSystem.mars.x + "\t" + solarSystem.mars.y
-						+ "\t" + solarSystem.mars.mass + "\t"
-						+ solarSystem.mars.r + "\t" + 1 + "\t" + 0 + "\t" + 0);
-				System.out.println(3 + "\t" + solarSystem.ship.x + "\t" + solarSystem.ship.y
-						+ "\t" + solarSystem.ship.mass + "\t"
-						+ solarSystem.ship.r + "\t" + 1 + "\t" + 1 + "\t" + 1);
-			}
-
-			Particle earthAux = solarSystem.integralMethod.moveParticle(solarSystem.earth, lForEarth);
-			Particle sunAux = solarSystem.integralMethod.moveParticle(solarSystem.sun, lForSun);
-			Particle marsAux = solarSystem.integralMethod.moveParticle(solarSystem.mars, lForMars);
-			Particle shipAux = solarSystem.integralMethod.moveParticle(solarSystem.ship, lForShip);
+            Particle earthAux = solarSystem.integralMethod.moveParticle(solarSystem.earth, solarSystem.lForEarth);
+            Particle sunAux = solarSystem.integralMethod.moveParticle(solarSystem.sun, solarSystem.lForSun);
+            Particle marsAux = solarSystem.integralMethod.moveParticle(solarSystem.mars, solarSystem.lForMars);
+            if (solarSystem.launched){
+                Particle shipAux = solarSystem.integralMethod.moveParticle(solarSystem.ship, solarSystem.lForShip);
+                solarSystem.ship = shipAux;
+            }
 
 			solarSystem.earth = earthAux;
 			solarSystem.mars = marsAux;
-			solarSystem.ship = shipAux;
 			solarSystem.sun = sunAux;
 
 			currentTime += deltaT;
@@ -156,39 +187,22 @@ public class SolarSystem {
 	public static void main(String[] args) {
 		double deltaT = 360; // 1 hour
 		double deltaT2 = 86400; // 1 day
-		double tf = 31536000; // 1 year
+		double tf = 10*31536000; // 1 year
+
+        double launchTime = 31536000;
 
 		Accelerator accelerator = new GravityAccelerator();
 		IntegralMethod beeman = new Beeman(deltaT, accelerator);
 
 		SolarSystem solarSystem = new SolarSystem(accelerator, beeman, deltaT);
 
-		List<Particle> lForEarth = new ArrayList<Particle>();
-		lForEarth.add(solarSystem.sun);
-		lForEarth.add(solarSystem.mars);
-		lForEarth.add(solarSystem.ship);
+        solarSystem.updateLists();
 
-		List<Particle> lForSun = new ArrayList<Particle>();
-		lForSun.add(solarSystem.earth);
-		lForSun.add(solarSystem.mars);
-		lForSun.add(solarSystem.ship);
+		solarSystem.regressParticle(solarSystem.earth, solarSystem.lForEarth);
+		solarSystem.regressParticle(solarSystem.sun, solarSystem.lForSun);
+		solarSystem.regressParticle(solarSystem.mars, solarSystem.lForMars);
 
-		List<Particle> lForMars = new ArrayList<Particle>();
-		lForMars.add(solarSystem.earth);
-		lForMars.add(solarSystem.sun);
-		lForMars.add(solarSystem.ship);
-
-		List<Particle> lForShip = new ArrayList<Particle>();
-		lForShip.add(solarSystem.earth);
-		lForShip.add(solarSystem.sun);
-		lForShip.add(solarSystem.mars);
-
-		solarSystem.regressParticle(solarSystem.earth, lForEarth);
-		solarSystem.regressParticle(solarSystem.sun, lForSun);
-		solarSystem.regressParticle(solarSystem.mars, lForMars);
-		solarSystem.regressParticle(solarSystem.ship, lForShip);
-
-		runForOvito(solarSystem, tf, deltaT, deltaT2);
+		run(solarSystem, tf, deltaT, deltaT2, launchTime);
 
 	}
 
