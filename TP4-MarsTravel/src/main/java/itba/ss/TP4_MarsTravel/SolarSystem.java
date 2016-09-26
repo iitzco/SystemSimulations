@@ -64,11 +64,11 @@ public class SolarSystem {
 		double y = distanceShipSun * Math.sin(angle);
 		double x = distanceShipSun * Math.cos(angle);
 
-		double speed = 3 * 1000; // (m/s)
-		double speedX = earth.speedX + speed * Math.cos((Math.PI / 2) - angle);
-		double speedY = earth.speedY + speed * Math.sin((Math.PI / 2) - angle);
+		double speed = (3 + 7.12) * 1000; // (m/s)
+		double speedX = earth.speedX + speed * Math.cos((Math.PI / 2) + angle);
+		double speedY = earth.speedY + speed * Math.sin((Math.PI / 2) + angle);
 
-		ship = new Particle(3,
+		this.ship = new Particle(3,
 				50,
 				x, y,
 				speedX, speedY,
