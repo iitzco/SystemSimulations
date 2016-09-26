@@ -24,8 +24,8 @@ public class GravityAccelerator implements Accelerator {
 	public BigDecimal getForceX(Particle p, List<Particle> l) {
 		BigDecimal ret = new BigDecimal(0);
 		for (Particle particle : l) {
-			ret = ret.add(getForce(p, particle)
-					.multiply((particle.x.subtract(p.x)).divide(getDistance(p, particle), MathContext.DECIMAL32)));
+			ret = ret.subtract(getForce(p, particle)
+					.multiply((p.x.subtract(particle.x)).divide(getDistance(p, particle), MathContext.DECIMAL32)));
 		}
 		return ret;
 	}
@@ -33,8 +33,8 @@ public class GravityAccelerator implements Accelerator {
 	public BigDecimal getForceY(Particle p, List<Particle> l) {
 		BigDecimal ret = new BigDecimal(0);
 		for (Particle particle : l) {
-			ret = ret.add(getForce(p, particle)
-					.multiply((particle.y.subtract(p.y)).divide(getDistance(p, particle), MathContext.DECIMAL32)));
+			ret = ret.subtract(getForce(p, particle)
+					.multiply((p.y.subtract(particle.y)).divide(getDistance(p, particle), MathContext.DECIMAL32)));
 		}
 		return ret;
 	}

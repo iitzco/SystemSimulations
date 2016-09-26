@@ -27,16 +27,16 @@ public class Beeman implements IntegralMethod {
 						.multiply(accelerator.getForceX(currP, l).divide(m, MathContext.DECIMAL32).multiply(deltaT)))
 				.add(new BigDecimal(5.0 / 6)
 						.multiply(accelerator.getForceX(p, l).divide(m, MathContext.DECIMAL32).multiply(deltaT)))
-				.subtract(new BigDecimal(1.0 / 6)
-						.multiply(accelerator.getForceX(previousP, l).divide(m, MathContext.DECIMAL32).multiply(deltaT)));
+				.subtract(new BigDecimal(1.0 / 6).multiply(
+						accelerator.getForceX(previousP, l).divide(m, MathContext.DECIMAL32).multiply(deltaT)));
 
 		nextP.speedY = p.speedY
 				.add(new BigDecimal(1.0 / 3)
 						.multiply(accelerator.getForceY(currP, l).divide(m, MathContext.DECIMAL32).multiply(deltaT)))
 				.add(new BigDecimal(5.0 / 6)
 						.multiply(accelerator.getForceY(p, l).divide(m, MathContext.DECIMAL32).multiply(deltaT)))
-				.subtract(new BigDecimal(1.0 / 6)
-						.multiply(accelerator.getForceY(previousP, l).divide(m, MathContext.DECIMAL32).multiply(deltaT)));
+				.subtract(new BigDecimal(1.0 / 6).multiply(
+						accelerator.getForceY(previousP, l).divide(m, MathContext.DECIMAL32).multiply(deltaT)));
 
 	}
 
@@ -48,17 +48,17 @@ public class Beeman implements IntegralMethod {
 
 		nextP.x = p.x.add(p.speedX.multiply(deltaT))
 				.add(new BigDecimal(2.0 / 3).multiply(accelerator.getForceX(p, l).divide(m, MathContext.DECIMAL32))
-						.multiply(deltaT.pow(2))
-						.subtract(new BigDecimal(1.0 / 6)
-								.multiply(accelerator.getForceX(previousP, l).divide(m, MathContext.DECIMAL32))
-								.multiply(deltaT.pow(2))));
+						.multiply(deltaT.pow(2)))
+				.subtract(new BigDecimal(1.0 / 6)
+						.multiply(accelerator.getForceX(previousP, l).divide(m, MathContext.DECIMAL32))
+						.multiply(deltaT.pow(2)));
 
 		nextP.y = p.y.add(p.speedY.multiply(deltaT))
 				.add(new BigDecimal(2.0 / 3).multiply(accelerator.getForceY(p, l).divide(m, MathContext.DECIMAL32))
-						.multiply(deltaT.pow(2))
-						.subtract(new BigDecimal(1.0 / 6)
-								.multiply(accelerator.getForceY(previousP, l).divide(m, MathContext.DECIMAL32))
-								.multiply(deltaT.pow(2))));
+						.multiply(deltaT.pow(2)))
+				.subtract(new BigDecimal(1.0 / 6)
+						.multiply(accelerator.getForceY(previousP, l).divide(m, MathContext.DECIMAL32))
+						.multiply(deltaT.pow(2)));
 	}
 
 	public String getName() {
