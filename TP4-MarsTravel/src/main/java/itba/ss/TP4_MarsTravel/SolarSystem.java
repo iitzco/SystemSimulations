@@ -38,12 +38,50 @@ public class SolarSystem {
 		sun = new Particle(1, new BigDecimal(695700 * 1000), new BigDecimal(0), new BigDecimal(0), new BigDecimal(0),
 				new BigDecimal(0), new BigDecimal(1.988).multiply(new BigDecimal(10).pow(30)));
 
-		// mars = new Particle(2, 3389.9 * 1000, 0.831483493435295 *
-		// Math.pow(10, 8) * 1000,
-		// -1.914579540822006 * Math.pow(10, 8) * 1000, 23.637912321314047 *
-		// 1000, 11.429021426712032 * 1000,
-		// 6.4185 * Math.pow(10, 23));
+		mars = new Particle(2, new BigDecimal(3389.9 * 1000),
+				new BigDecimal(0.831483493435295).multiply(new BigDecimal(10).pow(11)),
+				new BigDecimal(-1.914579540822006).multiply(new BigDecimal(10).pow(11)),
+				new BigDecimal(23.637912321314047).multiply(new BigDecimal(1000)),
+				new BigDecimal(11.429021426712032).multiply(new BigDecimal(1000)),
+				new BigDecimal(6.4185).multiply(new BigDecimal(10).pow(23)));
+
+		mars = new Particle(2, new BigDecimal(3389.9 * 1000),
+				new BigDecimal(0.831483493435295).multiply(new BigDecimal(10).pow(11)),
+				new BigDecimal(-1.914579540822006).multiply(new BigDecimal(10).pow(11)),
+				new BigDecimal(23.637912321314047).multiply(new BigDecimal(1000)),
+				new BigDecimal(11.429021426712032).multiply(new BigDecimal(1000)),
+				new BigDecimal(6.4185).multiply(new BigDecimal(10).pow(23)));
+
+		locateShip();
+
 		// ship = new Particle(3, 1, x, y, speedX, speedY, 2*Math.pow(10, 5));
+	}
+
+	private void locateShip() {
+		BigDecimal distanceSunEarth = getDistance(sun, earth);
+		BigDecimal diffX = earth.x.subtract(sun.x);
+		BigDecimal diffY = earth.y.subtract(sun.y);
+
+		double angle = Math.atan(diffY.divide(diffX, MathContext.DECIMAL32).doubleValue());
+
+		BigDecimal distanceShipSun = distanceSunEarth.add(earth.r).add(new BigDecimal(1500 * 1000));
+
+		BigDecimal y = distanceShipSun.multiply(new BigDecimal(Math.sin(angle)));
+		BigDecimal x = distanceShipSun.multiply(new BigDecimal(Math.cos(angle)));
+
+		BigDecimal speed = new BigDecimal(3 * 1000);
+		BigDecimal speedX = earth.speedX.add(speed.multiply(new BigDecimal(Math.cos(angle + (Math.PI / 2)))));
+		BigDecimal speedY = earth.speedY.add(speed.multiply(new BigDecimal(Math.sin(angle + (Math.PI / 2)))));
+
+		ship = new Particle(3, new BigDecimal(50), x, y, speedX, speedY,
+				new BigDecimal(2).multiply(new BigDecimal(10).pow(5)));
+
+		System.out.println(getDistance(ship, earth).subtract(earth.r));
+
+	}
+
+	private BigDecimal getDistance(Particle p, Particle other) {
+		return GravityAccelerator.bigSqrt(p.x.subtract(other.x).pow(2).add(p.y.subtract(other.y).pow(2)));
 	}
 
 	public void regressParticle(Particle p, List<Particle> l) {
@@ -67,23 +105,53 @@ public class SolarSystem {
 		while (currentTime.compareTo(tf) == -1) {
 			List<Particle> lForEarth = new ArrayList<Particle>();
 			lForEarth.add(solarSystem.sun);
+			lForEarth.add(solarSystem.mars);
+			lForEarth.add(solarSystem.ship);
+
 			List<Particle> lForSun = new ArrayList<Particle>();
 			lForSun.add(solarSystem.earth);
+			lForSun.add(solarSystem.mars);
+			lForSun.add(solarSystem.ship);
+
+			List<Particle> lForMars = new ArrayList<Particle>();
+			lForMars.add(solarSystem.earth);
+			lForMars.add(solarSystem.sun);
+			lForMars.add(solarSystem.ship);
+
+			List<Particle> lForShip = new ArrayList<Particle>();
+			lForShip.add(solarSystem.earth);
+			lForShip.add(solarSystem.sun);
+			lForShip.add(solarSystem.mars);
 
 			boolean isTimeToPrint = Math.abs(currentTime.divide(deltaT2, MathContext.DECIMAL32).doubleValue())
 					- Math.round(currentTime.divide(deltaT2, MathContext.DECIMAL32).doubleValue()) < EPSILON;
 			if (isTimeToPrint) {
-				System.out.println(2);
+				System.out.println(4);
 				System.out.println("t " + Math.round(currentTime.divide(deltaT2, MathContext.DECIMAL32).doubleValue()));
 			}
-			solarSystem.earth = solarSystem.integralMethod.moveParticle(solarSystem.earth, lForEarth);
-			solarSystem.sun = solarSystem.integralMethod.moveParticle(solarSystem.sun, lForSun);
+			Particle earthAux = solarSystem.integralMethod.moveParticle(solarSystem.earth, lForEarth);
+			Particle sunAux = solarSystem.integralMethod.moveParticle(solarSystem.sun, lForSun);
+			Particle marsAux = solarSystem.integralMethod.moveParticle(solarSystem.mars, lForMars);
+			Particle shipAux = solarSystem.integralMethod.moveParticle(solarSystem.ship, lForShip);
+
+			solarSystem.earth = earthAux;
+			solarSystem.mars = marsAux;
+			solarSystem.ship = shipAux;
+			solarSystem.sun = sunAux;
+
 			if (isTimeToPrint) {
-				System.out
-						.println(0 + "\t" + solarSystem.earth.x.doubleValue() + "\t" + solarSystem.earth.y.doubleValue()
-								+ "\t" + solarSystem.earth.mass.doubleValue() + "\t" + solarSystem.earth.r);
+				System.out.println(0 + "\t" + solarSystem.earth.x.doubleValue() + "\t"
+						+ solarSystem.earth.y.doubleValue() + "\t" + solarSystem.earth.mass.doubleValue() + "\t"
+						+ solarSystem.earth.r.multiply(new BigDecimal("10")) + "\t" + 0 + "\t" + 0 + "\t" + 1);
 				System.out.println(1 + "\t" + solarSystem.sun.x.doubleValue() + "\t" + solarSystem.sun.y.doubleValue()
-						+ "\t" + solarSystem.sun.mass.doubleValue() + "\t" + solarSystem.sun.r);
+						+ "\t" + solarSystem.sun.mass.doubleValue() + "\t"
+						+ solarSystem.sun.r.multiply(new BigDecimal("10")) + "\t" + 1 + "\t" + 1 + "\t" + 0);
+				System.out.println(2 + "\t" + solarSystem.mars.x.doubleValue() + "\t" + solarSystem.mars.y.doubleValue()
+						+ "\t" + solarSystem.mars.mass.doubleValue() + "\t"
+						+ solarSystem.mars.r.multiply(new BigDecimal("10")) + "\t" + 1 + "\t" + 0 + "\t" + 0);
+				System.out.println(3 + "\t" + solarSystem.ship.x.doubleValue() + "\t" + solarSystem.ship.y.doubleValue()
+						+ "\t" + solarSystem.ship.mass.doubleValue() + "\t"
+						+ solarSystem.ship.r.multiply(new BigDecimal("10")) + "\t" + 1 + "\t" + 1 + "\t" + 1);
 			}
 
 			currentTime = currentTime.add(deltaT);
@@ -92,8 +160,8 @@ public class SolarSystem {
 
 	public static void main(String[] args) {
 
-		BigDecimal deltaT = new BigDecimal(86400);
-		BigDecimal deltaT2 = new BigDecimal(86400);
+		BigDecimal deltaT = new BigDecimal(86400 * 2);
+		BigDecimal deltaT2 = new BigDecimal(86400 * 2);
 		BigDecimal tf = new BigDecimal(31536000);
 
 		Accelerator accelerator = new GravityAccelerator();
@@ -103,11 +171,28 @@ public class SolarSystem {
 
 		List<Particle> lForEarth = new ArrayList<Particle>();
 		lForEarth.add(solarSystem.sun);
+		lForEarth.add(solarSystem.mars);
+		lForEarth.add(solarSystem.ship);
+
 		List<Particle> lForSun = new ArrayList<Particle>();
 		lForSun.add(solarSystem.earth);
+		lForSun.add(solarSystem.mars);
+		lForSun.add(solarSystem.ship);
+
+		List<Particle> lForMars = new ArrayList<Particle>();
+		lForMars.add(solarSystem.earth);
+		lForMars.add(solarSystem.sun);
+		lForMars.add(solarSystem.ship);
+
+		List<Particle> lForShip = new ArrayList<Particle>();
+		lForShip.add(solarSystem.earth);
+		lForShip.add(solarSystem.sun);
+		lForShip.add(solarSystem.mars);
 
 		solarSystem.regressParticle(solarSystem.earth, lForEarth);
 		solarSystem.regressParticle(solarSystem.sun, lForSun);
+		solarSystem.regressParticle(solarSystem.mars, lForMars);
+		solarSystem.regressParticle(solarSystem.ship, lForShip);
 
 		runForOvito(solarSystem, tf, deltaT, deltaT2);
 
