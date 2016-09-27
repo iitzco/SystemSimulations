@@ -7,10 +7,11 @@ public class SolarSystem {
 
 	final static double YEAR = 3600 * 24 * 365;
 	final static double DAY = 3600 * 24;
+	final static double HOUR = 3600;
 	final static double WEEK = DAY * 7;
 	final static double MONTH = 30 * DAY;
 
-	final static double LAUNCH_SPEED = 3;
+	double launchSpeed;
 
 	Accelerator accelerator;
 	IntegralMethod integralMethod;
@@ -29,6 +30,7 @@ public class SolarSystem {
 	List<Particle> lForShip = new ArrayList<Particle>();
 
 	boolean launched = false;
+	double arrived = 0;
 
 	public SolarSystem(Accelerator accelerator, IntegralMethod integralMethod, double deltaT) {
 		this.accelerator = accelerator;
@@ -100,7 +102,7 @@ public class SolarSystem {
 		double y = distanceShipSun * Math.sin(angle);
 		double x = distanceShipSun * Math.cos(angle);
 
-		double speed = (LAUNCH_SPEED + 7.12) * 1000; // (m/s)
+		double speed = (launchSpeed + 7.12) * 1000; // (m/s)
 		double speedX = earth.speedX + speed * Math.cos((Math.PI / 2) + angle);
 		double speedY = earth.speedY + speed * Math.sin((Math.PI / 2) + angle);
 
@@ -165,14 +167,66 @@ public class SolarSystem {
 		}
 	}
 
-	public static void main(String[] args) {
-		double deltaT = 360; // 1 hour
-		double deltaT2 = DAY; // 1 day
-		double tf = 3 * YEAR; // 1 year
+	public static double parseExpression(String s) throws NumberFormatException {
+		String[] vec = s.split("-");
+		if (vec.length != 2)
+			throw new NumberFormatException();
 
-		double launchTime = 180 * DAY;
+		Double ret = Double.valueOf(vec[0]);
+		switch (vec[1].charAt(0)) {
+		case 'S':
+			ret *= 1;
+			break;
+		case 'H':
+			ret *= HOUR;
+			break;
+		case 'D':
+			ret *= DAY;
+			break;
+		case 'W':
+			ret *= WEEK;
+			break;
+		case 'M':
+			ret *= MONTH;
+			break;
+		case 'Y':
+			ret *= YEAR;
+			break;
+		default:
+			throw new NumberFormatException();
+		}
+		return ret;
+	}
+
+	public static void main(String[] args) {
 
 		int option = 0;
+		double deltaT = 0, tf = 0, deltaT2 = 0, launchTime = 0, from = 0, to = 0, step = 0, arrived = 0,
+				launchSpeed = 0;
+
+		try {
+			option = Integer.valueOf(args[0]);
+			deltaT = parseExpression(args[1]);
+			tf = parseExpression(args[2]);
+			launchSpeed = Double.valueOf(args[3]);
+			if (option == 0) {
+				if (args.length != 6)
+					throw new NumberFormatException();
+				deltaT2 = parseExpression(args[4]);
+				launchTime = parseExpression(args[5]);
+			} else if (option == 1) {
+				if (args.length != 8)
+					throw new NumberFormatException();
+				from = parseExpression(args[4]);
+				to = parseExpression(args[5]);
+				step = parseExpression(args[6]);
+				arrived = Double.valueOf(args[7]);
+			}
+		} catch (NumberFormatException e2) {
+			System.err.println("Wrong parameters");
+			return;
+		}
+
 		Accelerator accelerator = new GravityAccelerator();
 		IntegralMethod beeman = new Beeman(deltaT, accelerator);
 
@@ -185,31 +239,23 @@ public class SolarSystem {
 		solarSystem.regressParticle(solarSystem.mars, solarSystem.lForMars);
 
 		if (option == 0) {
+			solarSystem.launchSpeed = launchSpeed;
 			run(solarSystem, tf, deltaT, deltaT2, launchTime);
 		} else if (option == 1) {
-			double t = findLaunchTime(solarSystem, deltaT, accelerator, beeman);
-			System.out.println(t);
+			findLaunchTime(deltaT, accelerator, beeman, from, to, tf, step, arrived, launchSpeed);
 		}
 
 	}
 
-	private static double findLaunchTime(SolarSystem solarSystem, double deltaT, Accelerator accelerator,
-			IntegralMethod beeman) {
-		double ret = 0;
-		for (double i = 4 * MONTH; i < 2 * YEAR; i += MONTH) {
-			ret = runSystem(accelerator, beeman, deltaT, 3 * YEAR, i);
-			System.out.println("DAY " + (int) (i / DAY));
-			System.out.println(ret);
-			if (ret != -1) {
-				System.out.println("Arrived at " + ret);
-				return i;
-			}
+	private static void findLaunchTime(double deltaT, Accelerator accelerator, IntegralMethod beeman, double from,
+			double to, double tf, double step, double arrived, double launchSpeed) {
+		for (double i = from; i < to && i < tf; i += step) {
+			runSystem(accelerator, beeman, deltaT, tf, i, arrived, launchSpeed);
 		}
-		return -1;
 	}
 
-	private static double runSystem(Accelerator accelerator, IntegralMethod integralMethod, double deltaT, double tf,
-			double launchTime) {
+	private static void runSystem(Accelerator accelerator, IntegralMethod integralMethod, double deltaT, double tf,
+			double launchTime, double arrived, double launchSpeed) {
 		SolarSystem solarSystem = new SolarSystem(accelerator, integralMethod, deltaT);
 
 		solarSystem.updateLists();
@@ -219,12 +265,14 @@ public class SolarSystem {
 		solarSystem.regressParticle(solarSystem.mars, solarSystem.lForMars);
 
 		solarSystem.launched = false;
+		solarSystem.arrived = arrived;
+		solarSystem.launchSpeed = launchSpeed;
 
-		return runSimulation(solarSystem, deltaT, tf, launchTime);
+		runSimulation(solarSystem, deltaT, tf, launchTime);
 
 	}
 
-	private static double runSimulation(SolarSystem solarSystem, double deltaT, double tf, double launchTime) {
+	private static void runSimulation(SolarSystem solarSystem, double deltaT, double tf, double launchTime) {
 
 		double currentTime = 0;
 
@@ -257,19 +305,19 @@ public class SolarSystem {
 					minDistance = distance;
 					minTime = currentTime;
 				}
-				if (solarSystem.arrived())
-					return currentTime;
+				if (solarSystem.arrived()) {
+					System.out.println("Arrived! Journey took " + (int) (minTime / DAY) + " days.");
+					return;
+				}
 			}
 
 			currentTime += deltaT;
 		}
-		 System.out.print("MIN " + minDistance + " ");
-		 System.out.println("AT " + minTime);
-		return -1;
+		System.out.println("Min distance " + minDistance + " meters at " + (int) (minTime / DAY) + " days.");
 	}
 
 	private boolean arrived() {
-		return GravityAccelerator.getDistance(mars, ship) - mars.r - ship.r < 1000000E3;
+		return GravityAccelerator.getDistance(mars, ship) - mars.r - ship.r < arrived;
 	}
 
 }
