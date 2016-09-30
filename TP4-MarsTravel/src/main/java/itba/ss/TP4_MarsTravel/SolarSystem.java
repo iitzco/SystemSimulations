@@ -104,14 +104,16 @@ public class SolarSystem {
 
 		double angle = Math.atan2(diffY, diffX) + Math.toRadians(launchAngle);
 
-		double y = origin.y + LAUNCH_DISTANCE * Math.sin(angle);
-		double x = origin.x + LAUNCH_DISTANCE * Math.cos(angle);
+		double shipRad = 50;
+
+		double x = origin.x + ((origin.r + shipRad + LAUNCH_DISTANCE) * Math.cos(angle));
+		double y = origin.y + ((origin.r + shipRad + LAUNCH_DISTANCE) * Math.sin(angle));
 
 		double speed = (launchSpeed) * 1000; // (m/s)
 		double speedX = origin.speedX + speed * Math.cos((Math.PI / 2) + angle);
 		double speedY = origin.speedY + speed * Math.sin((Math.PI / 2) + angle);
 
-		this.ship = new Particle(3, 50, x, y, speedX, speedY, 2E5);
+		this.ship = new Particle(3, shipRad, x, y, speedX, speedY, 2E5);
 
 		regressParticle(ship, lForShip);
 	}
