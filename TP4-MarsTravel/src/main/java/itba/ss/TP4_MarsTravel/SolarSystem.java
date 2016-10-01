@@ -278,6 +278,8 @@ public class SolarSystem {
 	private static void findLaunchTime(double deltaT, Accelerator accelerator, IntegralMethod beeman, double from,
 			double to, double tf, double step, double arrived, double launchSpeed, double launchAngle,
 			boolean fromEarth) {
+		System.out.println("min distance (m), day after launch (of min distance), launch day");
+
 		for (double i = from; i < to && i < tf; i += step) {
 			runSystem(accelerator, beeman, deltaT, tf, i, arrived, launchSpeed, launchAngle, fromEarth);
 		}
@@ -300,8 +302,8 @@ public class SolarSystem {
 
 		solarSystem.fromEarth = fromEarth;
 
-		runSimulation(solarSystem, deltaT, tf, launchTime);
 
+		runSimulation(solarSystem, deltaT, tf, launchTime);
 	}
 
 	private static void runSimulation(SolarSystem solarSystem, double deltaT, double tf, double launchTime) {
@@ -339,14 +341,17 @@ public class SolarSystem {
 					minTime = currentTime;
 				}
 				if (solarSystem.arrived()) {
-					System.out.println("Arrived! Journey took " + (int) (minTime / DAY) + " days.");
+					System.out.println("--------------------------------");
+					System.out.println(String.format("%s, %d, %d", minDistance, (int) ((minTime - launchTime)/ DAY), (int) (launchTime / DAY)));
+					System.out.println("^^^^^^^^^^^^^ Arrived!");
+					System.out.println("--------------------------------");
 					return;
 				}
 			}
 
 			currentTime += deltaT;
 		}
-		System.out.println("Min distance " + minDistance + " meters at " + (int) (minTime / DAY) + " days.");
+		System.out.println(String.format("%s, %d, %d", minDistance, (int) ((minTime - launchTime)/ DAY), (int) (launchTime / DAY)));
 	}
 
 	private boolean arrived() {
