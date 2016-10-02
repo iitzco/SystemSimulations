@@ -344,6 +344,8 @@ public class SolarSystem {
 					System.out.println("--------------------------------");
 					System.out.println(String.format("%s, %d, %d", minDistance, (int) ((minTime - launchTime)/ DAY), (int) (launchTime / DAY)));
 					System.out.println("^^^^^^^^^^^^^ Arrived!");
+					double speed = Math.sqrt(Math.pow(solarSystem.ship.speedX / 1000, 2) + Math.pow(solarSystem.ship.speedY / 1000, 2));
+					System.out.println(String.format("Speed: %f km/s", speed));
 					System.out.println("--------------------------------");
 					return;
 				}
