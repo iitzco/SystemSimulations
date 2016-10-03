@@ -143,7 +143,17 @@ public class Oscillator {
 
 		// 0 para posiciones en dt, 1 para errores, 2 para Ovito.
 
-		int option = 2;
+		int option = 0;
+
+		try {
+			option = Integer.valueOf(args[0]);
+			deltaT = Double.valueOf(args[1]);
+			if (option == 2)
+				deltaT2 = Double.valueOf(args[2]);
+		} catch (Exception e) {
+			System.err.println("Wrong Parameters. Expect [1|2|3] deltaT (deltaT2)");
+			return;
+		}
 
 		Accelerator accelerator = new OscillatorAccelerator(k, g);
 		IntegralMethod verlet = new OriginalVerlet(deltaT, accelerator);
