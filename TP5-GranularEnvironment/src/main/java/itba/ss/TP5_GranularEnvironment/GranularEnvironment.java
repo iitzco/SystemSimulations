@@ -42,7 +42,7 @@ public class GranularEnvironment {
 
 		this.integralMethod = integralMethod;
 
-		locateParticles(10);
+		locateParticles(500);
 	}
 
 	private void locateParticles(int n) {
@@ -65,8 +65,10 @@ public class GranularEnvironment {
 					break;
 				}
 			} while (overlap(x, y, diameter / 2));
-			Particle p = new Particle(id++, diameter / 2, x, y, 0, 0, MASS);
-			this.particles.add(p);
+			if (flag) {
+				Particle p = new Particle(id++, diameter / 2, x, y, 0, 0, MASS);
+				this.particles.add(p);
+			}
 		}
 		this.N = this.particles.size();
 	}
@@ -85,7 +87,7 @@ public class GranularEnvironment {
 
 	public void run() {
 		double currentTime = 0;
-		CellIndexMethod method = new CellIndexMethod(this.L, 2 * this.D / 5, false);
+		CellIndexMethod method = new CellIndexMethod(this.L, this.D / 5, false);
 		int iteration = 0;
 		while (currentTime < tf) {
 			method.load(new HashSet<>(this.particles));
@@ -168,15 +170,15 @@ public class GranularEnvironment {
 	}
 
 	public void printOvitoState(int iteration) {
-		System.out.println(particles.size()+4);
+		System.out.println(particles.size() + 4);
 		System.out.println("t " + iteration);
 		for (Particle p : particles) {
 			System.out.println(p.id + "\t" + p.x + "\t" + p.y + "\t" + p.r + "\t" + p.mass);
 		}
 		System.out.println(particles.size() + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + MASS);
-		System.out.println(particles.size()+1 + "\t" + W + "\t" + 0 + "\t" + 0 + "\t" + MASS);
-		System.out.println(particles.size()+2 + "\t" + 0 + "\t" + L + "\t" + 0 + "\t" + MASS);
-		System.out.println(particles.size()+3 + "\t" + W + "\t" + L + "\t" + 0 + "\t" + MASS);
+		System.out.println(particles.size() + 1 + "\t" + W + "\t" + 0 + "\t" + 0 + "\t" + MASS);
+		System.out.println(particles.size() + 2 + "\t" + 0 + "\t" + L + "\t" + 0 + "\t" + MASS);
+		System.out.println(particles.size() + 3 + "\t" + W + "\t" + L + "\t" + 0 + "\t" + MASS);
 	}
 
 	public double totalArea() {
