@@ -11,17 +11,18 @@ public class CellIndexMethod {
 	Cell[][] matrix;
 	Map<Particle, Point> allParticles;
 	double L;
+	double W;
 	double rc;
 	double cellLen;
 	int N;
 	int M;
 	boolean contour;
 
-	public CellIndexMethod(int L, int M, double rc, boolean contour) {
+	public CellIndexMethod(double L, double rc, boolean contour) {
 		this.L = L;
 		this.rc = rc;
 		this.contour = contour;
-		this.M = M;
+		this.M = (int) Math.floor(L / rc);
 	}
 
 	private void addNeighbors(Cell c, Particle p, Map<Particle, Set<Particle>> m, int deltaX, int deltaY) {
@@ -74,6 +75,7 @@ public class CellIndexMethod {
 			}
 
 			aux = matrix[(coords.x + 1) % M][(coords.y + 1) % M];
+
 			if (coords.x + 1 < M && coords.y + 1 < M) {
 				addNeighbors(aux, particle, map, 0, 0);
 			} else if (contour) {
@@ -98,14 +100,17 @@ public class CellIndexMethod {
 		cellLen = ((double) L) / M;
 
 		matrix = new Cell[M][M];
+		for (int i = 0; i < matrix.length; i++) {
+			for (int j = 0; j < matrix.length; j++) {
+				matrix[i][j] = new Cell();
+			}
+		}
 
 		double maxRad = 0;
 
 		for (Particle p : particles) {
 			int x = (int) (p.x / cellLen);
 			int y = (int) (p.y / cellLen);
-			if (matrix[x][y] == null)
-				matrix[x][y] = new Cell();
 			matrix[x][y].set.add(p);
 			allParticles.put(p, new Point(x, y));
 			if (maxRad < p.r)

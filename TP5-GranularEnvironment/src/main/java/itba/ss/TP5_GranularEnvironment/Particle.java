@@ -6,6 +6,7 @@ public class Particle {
 
 	double x;
 	double y;
+
 	double prevX;
 	double prevY;
 
@@ -15,8 +16,14 @@ public class Particle {
 	double prevSpeedX;
 	double prevSpeedY;
 
+	double prevAccX = 0;
+	double prevAccY = 0;
+
+	Double fX = null;
+	Double fY = null;
+
 	final double mass;
-	
+
 	double[] rListX = new double[6];
 	double[] rListY = new double[6];
 
@@ -70,6 +77,11 @@ public class Particle {
 		this.mass = mass;
 	}
 
+	public Particle(int i, double r2, double mass) {
+		this.id = i;
+		this.r = r2;
+		this.mass = mass;
+	}
 
 	@Override
 	public String toString() {
