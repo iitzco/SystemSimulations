@@ -14,6 +14,8 @@ public class GranularEnvironment {
 	static final double MASS = 0.01;
 	static final double MAX_TRIES = 10000;
 
+	static final double DISTANCE_BOTTOM = 1;
+
 	double L;
 	double W;
 	double D;
@@ -25,6 +27,7 @@ public class GranularEnvironment {
 	double dt2;
 
 	List<Particle> particles;
+
 	int N;
 
 	IntegralMethod integralMethod;
@@ -42,23 +45,23 @@ public class GranularEnvironment {
 
 		this.integralMethod = integralMethod;
 
-		locateParticles(500);
+		locateParticles();
 	}
 
-	private void locateParticles(int n) {
+	private void locateParticles() {
 		this.particles = new ArrayList<Particle>();
 
 		boolean flag = true;
 		int id = 0;
 
-		while (flag && particles.size() < n) {
+		while (flag) {
 			double diameter = Math.random() * (this.D / 5 - this.D / 7) + (this.D / 7);
 			double r = diameter / 2;
 			double x = 0, y = 0;
 			int tries = 0;
 			do {
 				x = Math.random() * (this.W - 2 * r) + r;
-				y = Math.random() * (this.L - 2 * r) + r;
+				y = Math.random() * (this.L - 2 * r) + r + (DISTANCE_BOTTOM + D / 5);
 				tries++;
 				if (tries == MAX_TRIES) {
 					flag = false;
@@ -87,13 +90,20 @@ public class GranularEnvironment {
 
 	public void run() {
 		double currentTime = 0;
-		CellIndexMethod method = new CellIndexMethod(this.L, this.D / 5, false);
+		CellIndexMethod method = new CellIndexMethod(5 * (this.L + (DISTANCE_BOTTOM + D / 5)), this.D / 5, false);
 		int iteration = 0;
 		while (currentTime < tf) {
-			method.load(new HashSet<>(this.particles));
+			try {
+				method.load(new HashSet<>(this.particles));
+			} catch (IndexOutOfBoundsException e) {
+				System.err.println("Delta T was too big. Try with smaller");
+				System.exit(1);
+			}
 			Map<Particle, Set<Particle>> neighbors = method.findNeighbors();
 			List<Particle> nextGen = new ArrayList<>();
 			neighbors = filterNeighbors(neighbors);
+
+			checkRelocation();
 
 			addWallParticles(neighbors);
 
@@ -109,17 +119,57 @@ public class GranularEnvironment {
 		}
 	}
 
+	private void checkRelocation() {
+		for (Particle particle : particles) {
+			if (particle.y - particle.r < D / 5) {
+				relocateParticle(particle);
+			}
+		}
+
+	}
+
 	private void addWallParticles(Map<Particle, Set<Particle>> neighbors) {
 		for (Particle particle : particles) {
 			List<Particle> newParticles = getContactParticles(particle);
 			neighbors.get(particle).addAll(newParticles);
-
 		}
+	}
+
+	private void relocateParticle(Particle particle) {
+		particle.speedX = 0;
+		particle.speedY = 0;
+		particle.prevSpeedX = 0;
+		particle.prevSpeedY = 0;
+		particle.prevAccX = 0;
+		particle.prevAccY = 0;
+		particle.x = Math.random() * (this.W - 2 * particle.r) + particle.r;
+		Particle max = findHighestParticle(particle.x, particle.r);
+		double y = 0;
+		if (max == null) {
+			y = L;
+		} else {
+			y = Math.max(max.y + max.r, L);
+		}
+		particle.y = y + particle.r;
+
+	}
+
+	private Particle findHighestParticle(double x, double r) {
+		double aux = 0;
+		Particle p = null;
+		for (Particle particle : particles) {
+			if (Math.abs(particle.x - x) < particle.r + r && particle.y > aux) {
+				aux = particle.y;
+				p = particle;
+			}
+		}
+		return p;
 	}
 
 	private List<Particle> getContactParticles(Particle particle) {
 		List<Particle> ret = new ArrayList<>();
 		Particle p = null;
+
 		if (particle.x - particle.r < 0) {
 			p = new Particle(0, particle.r, particle.mass);
 			p.x = -particle.r;
@@ -127,8 +177,7 @@ public class GranularEnvironment {
 			p.speedX = 0;
 			p.speedY = 0;
 			ret.add(p);
-		}
-		if (particle.x + particle.r >= W) {
+		} else if (particle.x + particle.r >= W) {
 			p = new Particle(0, particle.r, particle.mass);
 			p.x = W + particle.r;
 			p.y = particle.y;
@@ -136,23 +185,18 @@ public class GranularEnvironment {
 			p.speedY = 0;
 			ret.add(p);
 		}
-		if (particle.y - particle.r < 0) {
+		if (particle.y - particle.r < (DISTANCE_BOTTOM + D / 5) && !(particle.x - particle.r >= (W / 2 - D / 2)
+				&& particle.x + particle.r < (W / 2 + D / 2) && particle.y - particle.r < (DISTANCE_BOTTOM + D / 5))) {
 			p = new Particle(0, particle.r, particle.mass);
-			p.y = -particle.r;
+			p.y = (DISTANCE_BOTTOM + D / 5) - particle.r;
 			p.x = particle.x;
 			p.speedX = 0;
 			p.speedY = 0;
 			ret.add(p);
 		}
-		if (particle.y + particle.r >= L) {
-			p = new Particle(0, particle.r, particle.mass);
-			p.y = particle.r;
-			p.x = particle.x;
-			p.speedX = 0;
-			p.speedY = 0;
-			ret.add(p);
-		}
+
 		return ret;
+
 	}
 
 	public Map<Particle, Set<Particle>> filterNeighbors(Map<Particle, Set<Particle>> original) {
@@ -190,13 +234,25 @@ public class GranularEnvironment {
 	}
 
 	public static void main(String[] args) {
-		double L = 10;
-		double W = 5;
-		double D = 2;
+		double L = 1;
+		double W = 0.75;
+		double D = 0.1 * W;
 
 		double tf = 5;
 		double deltaT = 0.00001;
 		double deltaT2 = 0.02;
+
+		try {
+			L = Double.valueOf(args[0]);
+			W = Double.valueOf(args[1]);
+			D = Double.valueOf(args[2]);
+			deltaT = Double.valueOf(args[3]);
+			deltaT2 = Double.valueOf(args[4]);
+			tf = Double.valueOf(args[5]);
+		} catch (Exception e) {
+			System.err.println("Wrong Parameters. Expect L W D deltaT deltaT2 tf");
+			return;
+		}
 
 		double kn = 1E5;
 		double kt = 2 * kn;

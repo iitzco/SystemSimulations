@@ -109,12 +109,14 @@ public class CellIndexMethod {
 		double maxRad = 0;
 
 		for (Particle p : particles) {
+
 			int x = (int) (p.x / cellLen);
 			int y = (int) (p.y / cellLen);
 			matrix[x][y].set.add(p);
 			allParticles.put(p, new Point(x, y));
 			if (maxRad < p.r)
 				maxRad = p.r;
+
 		}
 	}
 
