@@ -26,13 +26,15 @@ public class GranularEnvironment {
 	double dt;
 	double dt2;
 
+	int maxParticles;
+
 	List<Particle> particles;
 
 	int N;
 
 	IntegralMethod integralMethod;
 
-	public GranularEnvironment(double l, double w, double d, double tf, double dT, double dT2,
+	public GranularEnvironment(double l, double w, double d, double tf, double dT, double dT2, int maxParticles,
 			IntegralMethod integralMethod) {
 		super();
 		L = l;
@@ -43,18 +45,20 @@ public class GranularEnvironment {
 		this.dt = dT;
 		this.dt2 = dT2;
 
+		this.maxParticles = maxParticles;
+
 		this.integralMethod = integralMethod;
 
-		locateParticles();
+		locateParticles(maxParticles);
 	}
 
-	private void locateParticles() {
+	private void locateParticles(int size) {
 		this.particles = new ArrayList<Particle>();
 
 		boolean flag = true;
 		int id = 0;
 
-		while (flag) {
+		while (flag && particles.size() < size) {
 			double diameter = Math.random() * (this.D / 5 - this.D / 7) + (this.D / 7);
 			double r = diameter / 2;
 			double x = 0, y = 0;
@@ -90,9 +94,11 @@ public class GranularEnvironment {
 
 	public void run() {
 		double currentTime = 0;
-		CellIndexMethod method = new CellIndexMethod(5 * (this.L + (DISTANCE_BOTTOM + D / 5)), this.D / 5, false);
+		CellIndexMethod method = new CellIndexMethod(2 * (this.L + (DISTANCE_BOTTOM + D / 5)), this.D / 5, false);
 		int iteration = 0;
 		while (currentTime < tf) {
+			checkRelocation();
+
 			try {
 				method.load(new HashSet<>(this.particles));
 			} catch (IndexOutOfBoundsException e) {
@@ -100,10 +106,10 @@ public class GranularEnvironment {
 				System.exit(1);
 			}
 			Map<Particle, Set<Particle>> neighbors = method.findNeighbors();
-			List<Particle> nextGen = new ArrayList<>();
-			neighbors = filterNeighbors(neighbors);
 
-			checkRelocation();
+			List<Particle> nextGen = new ArrayList<>();
+
+			neighbors = filterNeighbors(neighbors);
 
 			addWallParticles(neighbors);
 
@@ -125,7 +131,6 @@ public class GranularEnvironment {
 				relocateParticle(particle);
 			}
 		}
-
 	}
 
 	private void addWallParticles(Map<Particle, Set<Particle>> neighbors) {
@@ -150,7 +155,7 @@ public class GranularEnvironment {
 		} else {
 			y = Math.max(max.y + max.r, L);
 		}
-		particle.y = y + particle.r;
+		particle.y = y + 2 * particle.r;
 
 	}
 
@@ -185,16 +190,30 @@ public class GranularEnvironment {
 			p.speedY = 0;
 			ret.add(p);
 		}
-		if (particle.y - particle.r < (DISTANCE_BOTTOM + D / 5) && !(particle.x - particle.r >= (W / 2 - D / 2)
-				&& particle.x + particle.r < (W / 2 + D / 2) && particle.y - particle.r < (DISTANCE_BOTTOM + D / 5))) {
-			p = new Particle(0, particle.r, particle.mass);
-			p.y = (DISTANCE_BOTTOM + D / 5) - particle.r;
-			p.x = particle.x;
-			p.speedX = 0;
-			p.speedY = 0;
-			ret.add(p);
+		if (Math.abs(particle.y - (DISTANCE_BOTTOM + D / 5)) < particle.r) {
+			if (particle.x <= (W / 2 - D / 2) || particle.x >= (W / 2 + D / 2)) {
+				p = new Particle(0, particle.r, particle.mass);
+				p.y = (DISTANCE_BOTTOM + D / 5) - particle.r;
+				p.x = particle.x;
+				p.speedX = 0;
+				p.speedY = 0;
+				ret.add(p);
+			} else if (particle.x - particle.r <= (W / 2 - D / 2)) {
+				p = new Particle(0, 0, particle.mass);
+				p.y = (DISTANCE_BOTTOM + D / 5);
+				p.x = (W / 2 - D / 2);
+				p.speedX = 0;
+				p.speedY = 0;
+				ret.add(p);
+			} else if (particle.x + particle.r >= (W / 2 + D / 2)) {
+				p = new Particle(0, 0, particle.mass);
+				p.y = (DISTANCE_BOTTOM + D / 5);
+				p.x = (W / 2 + D / 2);
+				p.speedX = 0;
+				p.speedY = 0;
+				ret.add(p);
+			}
 		}
-
 		return ret;
 
 	}
@@ -235,12 +254,14 @@ public class GranularEnvironment {
 
 	public static void main(String[] args) {
 		double L = 1;
-		double W = 0.75;
-		double D = 0.1 * W;
+		double W = 0.5;
+		double D = 0.01;
 
 		double tf = 5;
-		double deltaT = 0.00001;
+		double deltaT = 0.000001;
 		double deltaT2 = 0.02;
+
+		int maxParticles = Integer.MAX_VALUE;
 
 		try {
 			L = Double.valueOf(args[0]);
@@ -249,8 +270,11 @@ public class GranularEnvironment {
 			deltaT = Double.valueOf(args[3]);
 			deltaT2 = Double.valueOf(args[4]);
 			tf = Double.valueOf(args[5]);
+			if (args.length > 6) {
+				maxParticles = Integer.valueOf(args[6]);
+			}
 		} catch (Exception e) {
-			System.err.println("Wrong Parameters. Expect L W D deltaT deltaT2 tf");
+			System.err.println("Wrong Parameters. Expect L W D deltaT deltaT2 tf (maxParticles)");
 			return;
 		}
 
@@ -260,7 +284,7 @@ public class GranularEnvironment {
 		Accelerator accelerator = new GranularAccelerator(kn, kt);
 		IntegralMethod integralMethod = new Beeman(deltaT, accelerator);
 
-		GranularEnvironment g = new GranularEnvironment(L, W, D, tf, deltaT, deltaT2, integralMethod);
+		GranularEnvironment g = new GranularEnvironment(L, W, D, tf, deltaT, deltaT2, maxParticles, integralMethod);
 		g.run();
 
 	}

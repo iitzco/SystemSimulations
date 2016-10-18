@@ -44,6 +44,7 @@ public class Beeman implements IntegralMethod {
 				- (1.0 / 6) * p.prevAccX * Math.pow(deltaT, 2);
 		nextP.y = p.y + p.speedY * deltaT + (2.0 / 3) * (accelerator.getForceY(p, set) / m) * Math.pow(deltaT, 2)
 				- (1.0 / 6) * p.prevAccY * Math.pow(deltaT, 2);
+
 	}
 
 	public String getName() {
