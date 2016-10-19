@@ -7,6 +7,8 @@ public class Particle {
 	double x;
 	double y;
 
+	public boolean isWall = false;
+
 	double prevX;
 	double prevY;
 

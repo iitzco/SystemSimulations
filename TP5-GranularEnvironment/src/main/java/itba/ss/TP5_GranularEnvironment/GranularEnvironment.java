@@ -1,11 +1,6 @@
 package itba.ss.TP5_GranularEnvironment;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class GranularEnvironment {
 
@@ -118,7 +113,7 @@ public class GranularEnvironment {
 				nextGen.add(p);
 			}
 			if (Math.abs(currentTime / dt2 - Math.round(currentTime / dt2)) < EPSILON)
-				printOvitoState(iteration);
+				printOvitoState(iteration, neighbors);
 			this.particles = nextGen;
 			currentTime += dt;
 			iteration++;
@@ -177,6 +172,7 @@ public class GranularEnvironment {
 
 		if (particle.x - particle.r < 0) {
 			p = new Particle(0, particle.r, particle.mass);
+			p.isWall = true;
 			p.x = -particle.r;
 			p.y = particle.y;
 			p.speedX = 0;
@@ -184,6 +180,7 @@ public class GranularEnvironment {
 			ret.add(p);
 		} else if (particle.x + particle.r >= W) {
 			p = new Particle(0, particle.r, particle.mass);
+			p.isWall = true;
 			p.x = W + particle.r;
 			p.y = particle.y;
 			p.speedX = 0;
@@ -193,23 +190,26 @@ public class GranularEnvironment {
 		if (Math.abs(particle.y - (DISTANCE_BOTTOM + D / 5)) < particle.r) {
 			if (particle.x <= (W / 2 - D / 2) || particle.x >= (W / 2 + D / 2)) {
 				p = new Particle(0, particle.r, particle.mass);
+				p.isWall = true;
 				p.y = (DISTANCE_BOTTOM + D / 5) - particle.r;
 				p.x = particle.x;
 				p.speedX = 0;
 				p.speedY = 0;
 				ret.add(p);
-			} else if (particle.x - particle.r <= (W / 2 - D / 2)) {
+			} else if (particle.x - particle.r <= (W / 2 - D / 2) && getDistance(particle.x, particle.y,(W / 2 - D / 2),  (DISTANCE_BOTTOM + D / 5)) < particle.r) {
 				p = new Particle(0, 0, particle.mass);
 				p.y = (DISTANCE_BOTTOM + D / 5);
 				p.x = (W / 2 - D / 2);
+				p.isWall = true;
 				p.speedX = 0;
 				p.speedY = 0;
 				ret.add(p);
-			} else if (particle.x + particle.r >= (W / 2 + D / 2)) {
+			} else if (particle.x + particle.r >= (W / 2 + D / 2) && getDistance(particle.x, particle.y,(W / 2 + D / 2),  (DISTANCE_BOTTOM + D / 5)) < particle.r) {
 				p = new Particle(0, 0, particle.mass);
 				p.y = (DISTANCE_BOTTOM + D / 5);
 				p.x = (W / 2 + D / 2);
 				p.speedX = 0;
+				p.isWall = true;
 				p.speedY = 0;
 				ret.add(p);
 			}
@@ -232,16 +232,32 @@ public class GranularEnvironment {
 		return ret;
 	}
 
-	public void printOvitoState(int iteration) {
-		System.out.println(particles.size() + 4);
+	public void printOvitoState(int iteration, Map<Particle, Set<Particle>> otherp) {
+
+		List<Particle> walls = new LinkedList<Particle>();
+
+		for(Set<Particle> set : otherp.values()) {
+		    for(Particle p : set) {
+		        if (p.isWall) {
+                    walls.add(p);
+				}
+			}
+		}
+
+
+		System.out.println(particles.size() + 4 + walls.size());
 		System.out.println("t " + iteration);
 		for (Particle p : particles) {
-			System.out.println(p.id + "\t" + p.x + "\t" + p.y + "\t" + p.r + "\t" + p.mass);
+			System.out.println(p.id + "\t" + p.x + "\t" + p.y + "\t" + p.r + "\t" + p.mass + "\t 30 \t 0");
 		}
-		System.out.println(particles.size() + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + MASS);
-		System.out.println(particles.size() + 1 + "\t" + W + "\t" + 0 + "\t" + 0 + "\t" + MASS);
-		System.out.println(particles.size() + 2 + "\t" + 0 + "\t" + L + "\t" + 0 + "\t" + MASS);
-		System.out.println(particles.size() + 3 + "\t" + W + "\t" + L + "\t" + 0 + "\t" + MASS);
+		for (Particle p : walls) {
+			System.out.println(p.id + "\t" + p.x + "\t" + p.y + "\t" + p.r + "\t" + p.mass + "\t 0 \t 30");
+		}
+		System.out.println(particles.size() + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + MASS+ "\t 0 \t 0");
+
+		System.out.println(particles.size() + 1 + "\t" + W + "\t" + 0 + "\t" + 0 + "\t" + MASS+ "\t 0 \t 0");
+		System.out.println(particles.size() + 2 + "\t" + 0 + "\t" + L + "\t" + 0 + "\t" + MASS+ "\t 0 \t 0");
+		System.out.println(particles.size() + 3 + "\t" + W + "\t" + L + "\t" + 0 + "\t" + MASS+ "\t 0 \t 0");
 	}
 
 	public double totalArea() {
