@@ -196,7 +196,8 @@ public class GranularEnvironment {
 				p.speedX = 0;
 				p.speedY = 0;
 				ret.add(p);
-			} else if (particle.x - particle.r <= (W / 2 - D / 2) && getDistance(particle.x, particle.y,(W / 2 - D / 2),  (DISTANCE_BOTTOM + D / 5)) < particle.r) {
+			} else if (particle.x - particle.r <= (W / 2 - D / 2)
+					&& getDistance(particle.x, particle.y, (W / 2 - D / 2), (DISTANCE_BOTTOM + D / 5)) < particle.r) {
 				p = new Particle(0, 0, particle.mass);
 				p.y = (DISTANCE_BOTTOM + D / 5);
 				p.x = (W / 2 - D / 2);
@@ -204,7 +205,8 @@ public class GranularEnvironment {
 				p.speedX = 0;
 				p.speedY = 0;
 				ret.add(p);
-			} else if (particle.x + particle.r >= (W / 2 + D / 2) && getDistance(particle.x, particle.y,(W / 2 + D / 2),  (DISTANCE_BOTTOM + D / 5)) < particle.r) {
+			} else if (particle.x + particle.r >= (W / 2 + D / 2)
+					&& getDistance(particle.x, particle.y, (W / 2 + D / 2), (DISTANCE_BOTTOM + D / 5)) < particle.r) {
 				p = new Particle(0, 0, particle.mass);
 				p.y = (DISTANCE_BOTTOM + D / 5);
 				p.x = (W / 2 + D / 2);
@@ -236,28 +238,46 @@ public class GranularEnvironment {
 
 		List<Particle> walls = new LinkedList<Particle>();
 
-		for(Set<Particle> set : otherp.values()) {
-		    for(Particle p : set) {
-		        if (p.isWall) {
-                    walls.add(p);
-				}
-			}
-		}
-
+		// for (Set<Particle> set : otherp.values()) {
+		// for (Particle p : set) {
+		// if (p.isWall) {
+		// walls.add(p);
+		// }
+		// }
+		// }
 
 		System.out.println(particles.size() + 4 + walls.size());
 		System.out.println("t " + iteration);
-		for (Particle p : particles) {
-			System.out.println(p.id + "\t" + p.x + "\t" + p.y + "\t" + p.r + "\t" + p.mass + "\t 30 \t 0");
-		}
-		for (Particle p : walls) {
-			System.out.println(p.id + "\t" + p.x + "\t" + p.y + "\t" + p.r + "\t" + p.mass + "\t 0 \t 30");
-		}
-		System.out.println(particles.size() + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + MASS+ "\t 0 \t 0");
 
-		System.out.println(particles.size() + 1 + "\t" + W + "\t" + 0 + "\t" + 0 + "\t" + MASS+ "\t 0 \t 0");
-		System.out.println(particles.size() + 2 + "\t" + 0 + "\t" + L + "\t" + 0 + "\t" + MASS+ "\t 0 \t 0");
-		System.out.println(particles.size() + 3 + "\t" + W + "\t" + L + "\t" + 0 + "\t" + MASS+ "\t 0 \t 0");
+		double max_speed = findMaxSpeed();
+
+		for (Particle p : particles) {
+			double relative_speed = 1;
+			if (max_speed > 0) {
+				relative_speed = Math.sqrt(Math.pow(p.speedX, 2) + Math.pow(p.speedY, 2)) / max_speed;
+			}
+			System.out.println(
+					p.id + "\t" + p.x + "\t" + p.y + "\t" + p.r + "\t" + p.mass + "\t" + relative_speed + "\t 0\t 1");
+		}
+		// for (Particle p : walls) {
+		// System.out.println(p.id + "\t" + p.x + "\t" + p.y + "\t" + p.r + "\t"
+		// + p.mass + "\t 0 \t 30");
+		// }
+		System.out.println(particles.size() + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + MASS + "\t 0\t0\t 0");
+		System.out.println(particles.size() + 1 + "\t" + W + "\t" + 0 + "\t" + 0 + "\t" + MASS + "\t 0\t 0\t 1");
+		System.out.println(particles.size() + 2 + "\t" + 0 + "\t" + L + "\t" + 0 + "\t" + MASS + "\t 0\t 0\t 1");
+		System.out.println(particles.size() + 3 + "\t" + W + "\t" + L + "\t" + 0 + "\t" + MASS + "\t 0\t 0\t 1");
+	}
+
+	private double findMaxSpeed() {
+		double ret = 0;
+		for (Particle particle : particles) {
+			double speed = Math.sqrt(Math.pow(particle.speedX, 2) + Math.pow(particle.speedY, 2));
+			if (speed > ret) {
+				ret = speed;
+			}
+		}
+		return ret;
 	}
 
 	public double totalArea() {
@@ -269,9 +289,9 @@ public class GranularEnvironment {
 	}
 
 	public static void main(String[] args) {
-		double L = 1;
-		double W = 0.5;
-		double D = 0.01;
+		double L = 10;
+		double W = 5;
+		double D = 2;
 
 		double tf = 5;
 		double deltaT = 0.000001;
