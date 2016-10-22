@@ -21,16 +21,20 @@ public class GranularEnvironment {
 	double dt;
 	double dt2;
 
+	boolean open;
+
 	int maxParticles;
 
 	List<Particle> particles;
 
 	int N;
 
+	long caudal = 0;
+
 	IntegralMethod integralMethod;
 
-	public GranularEnvironment(double l, double w, double d, double tf, double dT, double dT2, int maxParticles,
-			IntegralMethod integralMethod) {
+	public GranularEnvironment(double l, double w, double d, double tf, double dT, double dT2, boolean open,
+			int maxParticles, IntegralMethod integralMethod) {
 		super();
 		L = l;
 		W = w;
@@ -41,6 +45,7 @@ public class GranularEnvironment {
 		this.dt2 = dT2;
 
 		this.maxParticles = maxParticles;
+		this.open = open;
 
 		this.integralMethod = integralMethod;
 
@@ -87,8 +92,9 @@ public class GranularEnvironment {
 		return Math.sqrt(Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2));
 	}
 
-	public void run() {
+	public void run(int option) {
 		double currentTime = 0;
+
 		CellIndexMethod method = new CellIndexMethod(2 * (this.L + (DISTANCE_BOTTOM + D / 5)), this.D / 5, false);
 		int iteration = 0;
 		while (currentTime < tf) {
@@ -113,17 +119,38 @@ public class GranularEnvironment {
 				nextGen.add(p);
 			}
 			if (Math.abs(currentTime / dt2 - Math.round(currentTime / dt2)) < EPSILON)
-				printOvitoState(iteration, neighbors);
+				switch (option) {
+				case 0:
+					printOvitoState(iteration, neighbors);
+					break;
+				case 1:
+					double energy = getEnergy();
+					System.out.println(currentTime + "\t" + energy);
+					break;
+				case 2:
+					System.out.println(currentTime + "\t" + caudal);
+					caudal = 0;
+					break;
+				}
 			this.particles = nextGen;
 			currentTime += dt;
 			iteration++;
 		}
 	}
 
+	private double getEnergy() {
+		double ret = 0;
+		for (Particle particle : particles) {
+			ret += Math.sqrt(Math.pow(particle.speedX, 2) + Math.pow(particle.speedY, 2));
+		}
+		return ret / particles.size();
+	}
+
 	private void checkRelocation() {
 		for (Particle particle : particles) {
 			if (particle.y - particle.r < D / 5) {
 				relocateParticle(particle);
+				caudal++;
 			}
 		}
 	}
@@ -187,31 +214,43 @@ public class GranularEnvironment {
 			p.speedY = 0;
 			ret.add(p);
 		}
-		if (Math.abs(particle.y - (DISTANCE_BOTTOM + D / 5)) < particle.r) {
-			if (particle.x <= (W / 2 - D / 2) || particle.x >= (W / 2 + D / 2)) {
+		if (this.open) {
+			if (Math.abs(particle.y - (DISTANCE_BOTTOM + D / 5)) < particle.r) {
+				if (particle.x <= (W / 2 - D / 2) || particle.x >= (W / 2 + D / 2)) {
+					p = new Particle(0, particle.r, particle.mass);
+					p.isWall = true;
+					p.y = (DISTANCE_BOTTOM + D / 5) - particle.r;
+					p.x = particle.x;
+					p.speedX = 0;
+					p.speedY = 0;
+					ret.add(p);
+				} else if (particle.x - particle.r <= (W / 2 - D / 2) && getDistance(particle.x, particle.y,
+						(W / 2 - D / 2), (DISTANCE_BOTTOM + D / 5)) < particle.r) {
+					p = new Particle(0, 0, particle.mass);
+					p.y = (DISTANCE_BOTTOM + D / 5);
+					p.x = (W / 2 - D / 2);
+					p.isWall = true;
+					p.speedX = 0;
+					p.speedY = 0;
+					ret.add(p);
+				} else if (particle.x + particle.r >= (W / 2 + D / 2) && getDistance(particle.x, particle.y,
+						(W / 2 + D / 2), (DISTANCE_BOTTOM + D / 5)) < particle.r) {
+					p = new Particle(0, 0, particle.mass);
+					p.y = (DISTANCE_BOTTOM + D / 5);
+					p.x = (W / 2 + D / 2);
+					p.speedX = 0;
+					p.isWall = true;
+					p.speedY = 0;
+					ret.add(p);
+				}
+			}
+		} else {
+			if (particle.y - particle.r < (DISTANCE_BOTTOM + D / 5)) {
 				p = new Particle(0, particle.r, particle.mass);
 				p.isWall = true;
-				p.y = (DISTANCE_BOTTOM + D / 5) - particle.r;
 				p.x = particle.x;
+				p.y = (DISTANCE_BOTTOM + D / 5) - particle.r;
 				p.speedX = 0;
-				p.speedY = 0;
-				ret.add(p);
-			} else if (particle.x - particle.r <= (W / 2 - D / 2)
-					&& getDistance(particle.x, particle.y, (W / 2 - D / 2), (DISTANCE_BOTTOM + D / 5)) < particle.r) {
-				p = new Particle(0, 0, particle.mass);
-				p.y = (DISTANCE_BOTTOM + D / 5);
-				p.x = (W / 2 - D / 2);
-				p.isWall = true;
-				p.speedX = 0;
-				p.speedY = 0;
-				ret.add(p);
-			} else if (particle.x + particle.r >= (W / 2 + D / 2)
-					&& getDistance(particle.x, particle.y, (W / 2 + D / 2), (DISTANCE_BOTTOM + D / 5)) < particle.r) {
-				p = new Particle(0, 0, particle.mass);
-				p.y = (DISTANCE_BOTTOM + D / 5);
-				p.x = (W / 2 + D / 2);
-				p.speedX = 0;
-				p.isWall = true;
 				p.speedY = 0;
 				ret.add(p);
 			}
@@ -237,15 +276,6 @@ public class GranularEnvironment {
 	public void printOvitoState(int iteration, Map<Particle, Set<Particle>> otherp) {
 
 		List<Particle> walls = new LinkedList<Particle>();
-
-		// for (Set<Particle> set : otherp.values()) {
-		// for (Particle p : set) {
-		// if (p.isWall) {
-		// walls.add(p);
-		// }
-		// }
-		// }
-
 		System.out.println(particles.size() + 4 + walls.size());
 		System.out.println("t " + iteration);
 
@@ -259,10 +289,6 @@ public class GranularEnvironment {
 			System.out.println(
 					p.id + "\t" + p.x + "\t" + p.y + "\t" + p.r + "\t" + p.mass + "\t" + relative_speed + "\t 0\t 1");
 		}
-		// for (Particle p : walls) {
-		// System.out.println(p.id + "\t" + p.x + "\t" + p.y + "\t" + p.r + "\t"
-		// + p.mass + "\t 0 \t 30");
-		// }
 		System.out.println(particles.size() + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + MASS + "\t 0\t0\t 0");
 		System.out.println(particles.size() + 1 + "\t" + W + "\t" + 0 + "\t" + 0 + "\t" + MASS + "\t 0\t 0\t 1");
 		System.out.println(particles.size() + 2 + "\t" + 0 + "\t" + L + "\t" + 0 + "\t" + MASS + "\t 0\t 0\t 1");
@@ -296,8 +322,13 @@ public class GranularEnvironment {
 		double tf = 5;
 		double deltaT = 0.000001;
 		double deltaT2 = 0.02;
+		double kn = 1E5;
+		double kt = 2 * kn;
 
 		int maxParticles = Integer.MAX_VALUE;
+
+		boolean open = true;
+		int option = 0;
 
 		try {
 			L = Double.valueOf(args[0]);
@@ -306,22 +337,37 @@ public class GranularEnvironment {
 			deltaT = Double.valueOf(args[3]);
 			deltaT2 = Double.valueOf(args[4]);
 			tf = Double.valueOf(args[5]);
-			if (args.length > 6) {
-				maxParticles = Integer.valueOf(args[6]);
+			kn = Double.valueOf(args[6]);
+			kt = Double.valueOf(args[7]);
+			if (args[8].toLowerCase().equals("open"))
+				open = true;
+			else if (args[8].toLowerCase().equals("closed"))
+				open = false;
+			else
+				throw new Exception();
+			if (args[9].toLowerCase().equals("ovito"))
+				option = 0;
+			else if (args[9].toLowerCase().equals("energy"))
+				option = 1;
+			else if (args[9].toLowerCase().equals("flow"))
+				option = 2;
+			else
+				throw new Exception();
+			if (args.length == 11) {
+				maxParticles = Integer.valueOf(args[10]);
 			}
 		} catch (Exception e) {
-			System.err.println("Wrong Parameters. Expect L W D deltaT deltaT2 tf (maxParticles)");
+			System.err.println(
+					"Wrong Parameters. Expect L W D deltaT deltaT2 tf kn kt [open|closed] [ovito|energy|flow] (maxParticles)");
 			return;
 		}
-
-		double kn = 1E5;
-		double kt = 2 * kn;
 
 		Accelerator accelerator = new GranularAccelerator(kn, kt);
 		IntegralMethod integralMethod = new Beeman(deltaT, accelerator);
 
-		GranularEnvironment g = new GranularEnvironment(L, W, D, tf, deltaT, deltaT2, maxParticles, integralMethod);
-		g.run();
+		GranularEnvironment g = new GranularEnvironment(L, W, D, tf, deltaT, deltaT2, open, maxParticles,
+				integralMethod);
+		g.run(option);
 
 	}
 }
