@@ -118,20 +118,22 @@ public class GranularEnvironment {
 				Particle p = integralMethod.moveParticle(particle, neighbors.get(particle));
 				nextGen.add(p);
 			}
-			if (Math.abs(currentTime / dt2 - Math.round(currentTime / dt2)) < EPSILON)
+			if (Math.abs(currentTime / dt2 - Math.round(currentTime / dt2)) < EPSILON) {
+				double roundOff = Math.round(currentTime * 1000.0) / 1000.0;
 				switch (option) {
 				case 0:
 					printOvitoState(iteration, neighbors);
 					break;
 				case 1:
 					double energy = getEnergy();
-					System.out.println(currentTime + "\t" + energy);
+					System.out.println(roundOff + "\t" + energy + "\t" + (energy * particles.size()));
 					break;
 				case 2:
-					System.out.println(currentTime + "\t" + caudal);
+					System.out.println(roundOff + "\t" + caudal);
 					caudal = 0;
 					break;
 				}
+			}
 			this.particles = nextGen;
 			currentTime += dt;
 			iteration++;
@@ -141,7 +143,7 @@ public class GranularEnvironment {
 	private double getEnergy() {
 		double ret = 0;
 		for (Particle particle : particles) {
-			ret += Math.sqrt(Math.pow(particle.speedX, 2) + Math.pow(particle.speedY, 2));
+			ret += (1.0 / 2) * particle.mass * (Math.pow(particle.speedX, 2) + Math.pow(particle.speedY, 2));
 		}
 		return ret / particles.size();
 	}
