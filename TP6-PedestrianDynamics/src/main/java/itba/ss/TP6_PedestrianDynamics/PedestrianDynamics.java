@@ -14,6 +14,8 @@ public class PedestrianDynamics {
 
 	static final double MASS = 70;
 
+	static final double MARGIN = 0.1;
+
 	static final double DISTANCE_BOTTOM = 5;
 	static final double DISTANCE_LIMIT = 1;
 
@@ -251,8 +253,7 @@ public class PedestrianDynamics {
 
 	public void printOvitoState(int iteration, Map<Particle, Set<Particle>> otherp) {
 
-		List<Particle> walls = new LinkedList<Particle>();
-		System.out.println(particles.size() + 4 + walls.size());
+		System.out.println(particles.size() + 6);
 		System.out.println("t " + iteration);
 
 		double max_speed = findMaxSpeed();
@@ -263,12 +264,20 @@ public class PedestrianDynamics {
 				relative_speed = Math.sqrt(Math.pow(p.speedX, 2) + Math.pow(p.speedY, 2)) / max_speed;
 			}
 			System.out.println(
-					p.id + "\t" + p.x + "\t" + p.y + "\t" + p.r + "\t" + p.mass + "\t" + relative_speed + "\t 0\t 1");
+					p.id + "\t" + p.x + "\t" + p.y + "\t" + p.r + "\t" + p.mass + "\t" + relative_speed + "\t0\t1\t10");
 		}
-		System.out.println(particles.size() + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + MASS + "\t 0\t0\t 0");
-		System.out.println(particles.size() + 1 + "\t" + W + "\t" + 0 + "\t" + 0 + "\t" + MASS + "\t 0\t 0\t 1");
-		System.out.println(particles.size() + 2 + "\t" + 0 + "\t" + L + "\t" + 0 + "\t" + MASS + "\t 0\t 0\t 1");
-		System.out.println(particles.size() + 3 + "\t" + W + "\t" + L + "\t" + 0 + "\t" + MASS + "\t 0\t 0\t 1");
+		System.out
+				.println(particles.size() + "\t" + 0 + "\t" + getBaseLine() + "\t" + 0 + "\t" + MASS + "\t0\t0\t0\t1");
+		System.out.println(
+				particles.size() + 1 + "\t" + W + "\t" + getBaseLine() + "\t" + 0 + "\t" + MASS + "\t0\t0\t1\t2");
+		System.out.println(
+				particles.size() + 2 + "\t" + 0 + "\t" + (L + getBaseLine()) + "\t" + 0 + "\t" + MASS + "\t0\t0\t1\t3");
+		System.out.println(
+				particles.size() + 3 + "\t" + W + "\t" + (L + getBaseLine()) + "\t" + 0 + "\t" + MASS + "\t0\t0\t1\t4");
+		System.out.println(particles.size() + 4 + "\t" + (W / 2 - D / 2) + "\t" + getBaseLine() + "\t" + 0 + "\t" + MASS
+				+ "\t0\t0\t1\t5");
+		System.out.println(particles.size() + 5 + "\t" + (W / 2 + D / 2) + "\t" + getBaseLine() + "\t" + 0 + "\t" + MASS
+				+ "\t0\t0\t1\t6");
 	}
 
 	private double findMaxSpeed() {
@@ -291,11 +300,15 @@ public class PedestrianDynamics {
 	}
 
 	public double getTargetX(Particle p) {
-		return W / 2;
+		if (p.x - p.r <= W / 2 - D / 2 + MARGIN)
+			return W / 2 - D / 2 + p.r + MARGIN;
+		if (p.x + p.r >= W / 2 + D / 2 - MARGIN)
+			return W / 2 + D / 2 - p.r - MARGIN;
+		return p.x;
 	}
 
 	public double getTargetY(Particle p) {
-		if (p.y + p.r < getBaseLine())
+		if (p.y < getBaseLine())
 			return 0;
 		return getBaseLine();
 	}

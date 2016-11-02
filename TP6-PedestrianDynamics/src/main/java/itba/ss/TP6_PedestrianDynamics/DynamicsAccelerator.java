@@ -44,8 +44,8 @@ public class DynamicsAccelerator implements Accelerator {
 			}
 			// Social Force
 			if (!particle.isWall) {
-				fX += A * Math.exp(-epsilon / B) * getENX(p, particle);
-				fY += A * Math.exp(-epsilon / B) * getENY(p, particle);
+				fX += (-1) * A * Math.exp(-epsilon / B) * getENX(p, particle);
+				fY += (-1) * A * Math.exp(-epsilon / B) * getENY(p, particle);
 			}
 
 		}
