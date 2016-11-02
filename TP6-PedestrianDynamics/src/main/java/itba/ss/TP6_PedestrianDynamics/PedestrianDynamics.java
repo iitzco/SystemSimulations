@@ -3,7 +3,6 @@ package itba.ss.TP6_PedestrianDynamics;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,8 +28,6 @@ public class PedestrianDynamics {
 	double dt;
 	double dt2;
 
-	boolean open;
-
 	int maxParticles;
 
 	List<Particle> particles;
@@ -43,8 +40,8 @@ public class PedestrianDynamics {
 
 	double desiredForce = 6;
 
-	public PedestrianDynamics(double l, double w, double d, double tf, double dT, double dT2, boolean open,
-			int maxParticles, IntegralMethod integralMethod) {
+	public PedestrianDynamics(double l, double w, double d, double tf, double dT, double dT2, int maxParticles,
+			IntegralMethod integralMethod) {
 		super();
 		L = l;
 		W = w;
@@ -55,7 +52,6 @@ public class PedestrianDynamics {
 		this.dt2 = dT2;
 
 		this.maxParticles = maxParticles;
-		this.open = open;
 
 		this.integralMethod = integralMethod;
 
@@ -173,67 +169,107 @@ public class PedestrianDynamics {
 
 	private List<Particle> getContactParticles(Particle particle) {
 		List<Particle> ret = new ArrayList<>();
-		Particle p = null;
 
-		if (particle.x - particle.r < 0) {
+		Particle p = null;
+		// X - right
+		p = new Particle(0, particle.r, particle.mass);
+		p.isWall = true;
+		p.x = -particle.r;
+		p.y = particle.y;
+		p.speedX = 0;
+		p.speedY = 0;
+		ret.add(p);
+		// X - left
+		p = new Particle(0, particle.r, particle.mass);
+		p.isWall = true;
+		p.x = W + particle.r;
+		p.y = particle.y;
+		p.speedX = 0;
+		p.speedY = 0;
+		ret.add(p);
+		// Y - BOTTOM
+		if (particle.x <= (W / 2 - D / 2) || particle.x >= (W / 2 + D / 2)) {
 			p = new Particle(0, particle.r, particle.mass);
 			p.isWall = true;
-			p.x = -particle.r;
-			p.y = particle.y;
-			p.speedX = 0;
-			p.speedY = 0;
-			ret.add(p);
-		} else if (particle.x + particle.r >= W) {
-			p = new Particle(0, particle.r, particle.mass);
-			p.isWall = true;
-			p.x = W + particle.r;
-			p.y = particle.y;
+			p.y = getBaseLine() - particle.r;
+			p.x = particle.x;
 			p.speedX = 0;
 			p.speedY = 0;
 			ret.add(p);
 		}
-		if (this.open) {
-			if (Math.abs(particle.y - getBaseLine()) < particle.r) {
-				if (particle.x <= (W / 2 - D / 2) || particle.x >= (W / 2 + D / 2)) {
-					p = new Particle(0, particle.r, particle.mass);
-					p.isWall = true;
-					p.y = getBaseLine() - particle.r;
-					p.x = particle.x;
-					p.speedX = 0;
-					p.speedY = 0;
-					ret.add(p);
-				} else if (particle.x - particle.r <= (W / 2 - D / 2)
-						&& getDistance(particle.x, particle.y, (W / 2 - D / 2), (getBaseLine())) < particle.r) {
-					p = new Particle(0, 0, particle.mass);
-					p.y = getBaseLine();
-					p.x = (W / 2 - D / 2);
-					p.isWall = true;
-					p.speedX = 0;
-					p.speedY = 0;
-					ret.add(p);
-				} else if (particle.x + particle.r >= (W / 2 + D / 2)
-						&& getDistance(particle.x, particle.y, (W / 2 + D / 2), (getBaseLine())) < particle.r) {
-					p = new Particle(0, 0, particle.mass);
-					p.y = getBaseLine();
-					p.x = (W / 2 + D / 2);
-					p.speedX = 0;
-					p.isWall = true;
-					p.speedY = 0;
-					ret.add(p);
-				}
-			}
-		} else {
-			if (particle.y - particle.r < (getBaseLine())) {
-				p = new Particle(0, particle.r, particle.mass);
+		if (Math.abs(particle.y - getBaseLine()) < particle.r) {
+			if (particle.x - particle.r <= (W / 2 - D / 2)
+					&& getDistance(particle.x, particle.y, (W / 2 - D / 2), (getBaseLine())) < particle.r) {
+				p = new Particle(0, 0, particle.mass);
+				p.y = getBaseLine();
+				p.x = (W / 2 - D / 2);
 				p.isWall = true;
-				p.x = particle.x;
-				p.y = getBaseLine() - particle.r;
 				p.speedX = 0;
+				p.speedY = 0;
+				ret.add(p);
+			} else if (particle.x + particle.r >= (W / 2 + D / 2)
+					&& getDistance(particle.x, particle.y, (W / 2 + D / 2), (getBaseLine())) < particle.r) {
+				p = new Particle(0, 0, particle.mass);
+				p.y = getBaseLine();
+				p.x = (W / 2 + D / 2);
+				p.speedX = 0;
+				p.isWall = true;
 				p.speedY = 0;
 				ret.add(p);
 			}
 		}
+
 		return ret;
+
+		// if (particle.x - particle.r < 0) {
+		// p = new Particle(0, particle.r, particle.mass);
+		// p.isWall = true;
+		// p.x = -particle.r;
+		// p.y = particle.y;
+		// p.speedX = 0;
+		// p.speedY = 0;
+		// ret.add(p);
+		// } else if (particle.x + particle.r >= W) {
+		// p = new Particle(0, particle.r, particle.mass);
+		// p.isWall = true;
+		// p.x = W + particle.r;
+		// p.y = particle.y;
+		// p.speedX = 0;
+		// p.speedY = 0;
+		// ret.add(p);
+		// }
+		// if (Math.abs(particle.y - getBaseLine()) < particle.r) {
+		// if (particle.x <= (W / 2 - D / 2) || particle.x >= (W / 2 + D / 2)) {
+		// p = new Particle(0, particle.r, particle.mass);
+		// p.isWall = true;
+		// p.y = getBaseLine() - particle.r;
+		// p.x = particle.x;
+		// p.speedX = 0;
+		// p.speedY = 0;
+		// ret.add(p);
+		// } else if (particle.x - particle.r <= (W / 2 - D / 2)
+		// && getDistance(particle.x, particle.y, (W / 2 - D / 2),
+		// (getBaseLine())) < particle.r) {
+		// p = new Particle(0, 0, particle.mass);
+		// p.y = getBaseLine();
+		// p.x = (W / 2 - D / 2);
+		// p.isWall = true;
+		// p.speedX = 0;
+		// p.speedY = 0;
+		// ret.add(p);
+		// } else if (particle.x + particle.r >= (W / 2 + D / 2)
+		// && getDistance(particle.x, particle.y, (W / 2 + D / 2),
+		// (getBaseLine())) < particle.r) {
+		// p = new Particle(0, 0, particle.mass);
+		// p.y = getBaseLine();
+		// p.x = (W / 2 + D / 2);
+		// p.speedX = 0;
+		// p.isWall = true;
+		// p.speedY = 0;
+		// ret.add(p);
+		// }
+		// }
+		// return ret;
 
 	}
 
@@ -330,7 +366,6 @@ public class PedestrianDynamics {
 
 		int maxParticles = Integer.MAX_VALUE;
 
-		boolean open = true;
 		int option = 0;
 
 		try {
@@ -342,33 +377,27 @@ public class PedestrianDynamics {
 			tf = Double.valueOf(args[5]);
 			kn = Double.valueOf(args[6]);
 			kt = Double.valueOf(args[7]);
-			if (args[8].toLowerCase().equals("open"))
-				open = true;
-			else if (args[8].toLowerCase().equals("closed"))
-				open = false;
-			else
-				throw new Exception();
-			if (args[9].toLowerCase().equals("ovito"))
+			if (args[8].toLowerCase().equals("ovito"))
 				option = 0;
-			else if (args[9].toLowerCase().equals("energy"))
+			else if (args[8].toLowerCase().equals("energy"))
 				option = 1;
-			else if (args[9].toLowerCase().equals("flow"))
+			else if (args[8].toLowerCase().equals("flow"))
 				option = 2;
 			else
 				throw new Exception();
-			if (args.length == 11) {
-				maxParticles = Integer.valueOf(args[10]);
+			if (args.length == 10) {
+				maxParticles = Integer.valueOf(args[9]);
 			}
 		} catch (Exception e) {
 			System.err.println(
-					"Wrong Parameters. Expect L W D deltaT deltaT2 tf kn kt [open|closed] [ovito|energy|flow] (maxParticles)");
+					"Wrong Parameters. Expect L W D deltaT deltaT2 tf kn kt [ovito|energy|flow] (maxParticles)");
 			return;
 		}
 
 		Accelerator accelerator = new DynamicsAccelerator(kn, kt);
 		IntegralMethod integralMethod = new Beeman(deltaT, accelerator);
 
-		PedestrianDynamics p = new PedestrianDynamics(L, W, D, tf, deltaT, deltaT2, open, maxParticles, integralMethod);
+		PedestrianDynamics p = new PedestrianDynamics(L, W, D, tf, deltaT, deltaT2, maxParticles, integralMethod);
 		p.run(option);
 
 	}
