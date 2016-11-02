@@ -28,6 +28,8 @@ public class PedestrianDynamics {
 	double dt;
 	double dt2;
 
+	double desiredSpeed;
+
 	int maxParticles;
 
 	List<Particle> particles;
@@ -40,10 +42,8 @@ public class PedestrianDynamics {
 
 	IntegralMethod integralMethod;
 
-	double desiredForce = 6;
-
 	public PedestrianDynamics(double l, double w, double d, double tf, double dT, double dT2, int maxParticles,
-			IntegralMethod integralMethod) {
+			double desiredSpeed, IntegralMethod integralMethod) {
 		super();
 		L = l;
 		W = w;
@@ -52,6 +52,8 @@ public class PedestrianDynamics {
 		this.tf = tf;
 		this.dt = dT;
 		this.dt2 = dT2;
+
+		this.desiredSpeed = desiredSpeed;
 
 		this.maxParticles = maxParticles;
 
@@ -78,7 +80,7 @@ public class PedestrianDynamics {
 				x = Math.random() * (this.W - 2 * r) + r;
 				y = Math.random() * (this.L - 2 * r) + r + getBaseLine();
 			} while (overlap(x, y, diameter / 2));
-			Particle p = new Particle(id++, diameter / 2, x, y, 0, 0, MASS, desiredForce);
+			Particle p = new Particle(id++, diameter / 2, x, y, 0, 0, MASS, desiredSpeed);
 			this.particles.add(p);
 		}
 		this.N = this.particles.size();
@@ -309,6 +311,8 @@ public class PedestrianDynamics {
 		double kn = 1E5;
 		double kt = 2 * kn;
 
+		double desiredSpeed = 6;
+
 		int maxParticles = Integer.MAX_VALUE;
 
 		int option = 0;
@@ -330,19 +334,19 @@ public class PedestrianDynamics {
 				option = 2;
 			else
 				throw new Exception();
-			if (args.length == 10) {
-				maxParticles = Integer.valueOf(args[9]);
-			}
+			maxParticles = Integer.valueOf(args[9]);
+			desiredSpeed = Double.valueOf(args[10]);
 		} catch (Exception e) {
 			System.err.println(
-					"Wrong Parameters. Expect L W D deltaT deltaT2 tf kn kt [ovito|escape|total] (maxParticles)");
+					"Wrong Parameters. Expect L W D deltaT deltaT2 tf kn kt [ovito|escape|total] (maxParticles) desiredSpeed");
 			return;
 		}
 
 		Accelerator accelerator = new DynamicsAccelerator(kn, kt);
 		IntegralMethod integralMethod = new Beeman(deltaT, accelerator);
 
-		PedestrianDynamics p = new PedestrianDynamics(L, W, D, tf, deltaT, deltaT2, maxParticles, integralMethod);
+		PedestrianDynamics p = new PedestrianDynamics(L, W, D, tf, deltaT, deltaT2, maxParticles, desiredSpeed,
+				integralMethod);
 		p.run(option);
 
 		if (option == 1) {
