@@ -18,6 +18,8 @@ public class PedestrianDynamics {
 	static final double DISTANCE_BOTTOM = 5;
 	static final double DISTANCE_LIMIT = 1;
 
+	static final double EXTRA_TIME_WHEN_FINISHED = 1;
+
 	double L;
 	double W;
 	double D;
@@ -42,6 +44,9 @@ public class PedestrianDynamics {
 
 	IntegralMethod integralMethod;
 
+	boolean finished;
+	double extraTime;
+
 	public PedestrianDynamics(double l, double w, double d, double tf, double dT, double dT2, int maxParticles,
 			double desiredSpeed, IntegralMethod integralMethod) {
 		super();
@@ -65,6 +70,9 @@ public class PedestrianDynamics {
 
 		escapedParticles = new HashSet<>();
 		times = new ArrayList<>();
+
+		finished = false;
+		extraTime = 0;
 	}
 
 	private void locateParticles(int size) {
@@ -103,7 +111,7 @@ public class PedestrianDynamics {
 
 		CellIndexMethod method = new CellIndexMethod(this.L + this.getBaseLine(), 2, false);
 		int iteration = 0;
-		while (currentTime < tf) {
+		while (currentTime < tf && !(finished && extraTime > EXTRA_TIME_WHEN_FINISHED)) {
 			checkRelocation();
 
 			try {
@@ -125,13 +133,15 @@ public class PedestrianDynamics {
 				nextGen.add(p);
 				addPossibleEscape(p, currentTime);
 			}
-			if (option == 0 && Math.abs(currentTime / dt2 - Math.round(currentTime / dt2)) < EPSILON) {
+			if (Math.abs(currentTime / dt2 - Math.round(currentTime / dt2)) < EPSILON) {
 				printOvitoState(iteration, neighbors);
 			}
 
 			this.particles = nextGen;
 			currentTime += dt;
 			iteration++;
+			if (finished)
+				extraTime += dt;
 		}
 	}
 
@@ -140,6 +150,10 @@ public class PedestrianDynamics {
 			if (!escapedParticles.contains(particle)) {
 				escapedParticles.add(particle);
 				times.add(currentTime);
+				System.err.println(currentTime);
+				if (escapedParticles.size() == N) {
+					finished = true;
+				}
 			}
 		}
 	}
@@ -326,19 +340,10 @@ public class PedestrianDynamics {
 			tf = Double.valueOf(args[5]);
 			kn = Double.valueOf(args[6]);
 			kt = Double.valueOf(args[7]);
-			if (args[8].toLowerCase().equals("ovito"))
-				option = 0;
-			else if (args[8].toLowerCase().equals("escape"))
-				option = 1;
-			else if (args[8].toLowerCase().equals("total"))
-				option = 2;
-			else
-				throw new Exception();
-			maxParticles = Integer.valueOf(args[9]);
-			desiredSpeed = Double.valueOf(args[10]);
+			maxParticles = Integer.valueOf(args[8]);
+			desiredSpeed = Double.valueOf(args[9]);
 		} catch (Exception e) {
-			System.err.println(
-					"Wrong Parameters. Expect L W D deltaT deltaT2 tf kn kt [ovito|escape|total] (maxParticles) desiredSpeed");
+			System.err.println("Wrong Parameters. Expect L W D deltaT deltaT2 tf kn kt maxParticles desiredSpeed");
 			return;
 		}
 
@@ -348,16 +353,6 @@ public class PedestrianDynamics {
 		PedestrianDynamics p = new PedestrianDynamics(L, W, D, tf, deltaT, deltaT2, maxParticles, desiredSpeed,
 				integralMethod);
 		p.run(option);
-
-		if (option == 1) {
-			for (Double time : p.times) {
-				System.out.println(time);
-			}
-		}
-		if (option == 2) {
-			if (p.times.size() > 0)
-				System.out.println(p.times.get(p.times.size() - 1));
-		}
 
 	}
 }
