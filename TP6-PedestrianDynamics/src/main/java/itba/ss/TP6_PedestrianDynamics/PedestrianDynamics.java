@@ -11,7 +11,7 @@ public class PedestrianDynamics {
 
 	static final double EPSILON = 0.000001;
 
-	static final double MASS = 70;
+	static final double MASS = 80;
 
 	static final double MARGIN = 0.1;
 
