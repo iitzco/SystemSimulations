@@ -73,7 +73,7 @@ public class HourGlass {
 					flag = false;
 					break;
 				}
-			} while (overlap(x, y, z, r) || !insideGlass(x, y, z));
+			} while (overlap(x, y, z, r) || !insideGlass(x, y, z, r));
 			if (flag) {
 				Particle p = new Particle(id++, diameter / 2, x, y, z, 0, 0, 0, MASS);
 				this.particles.add(p);
@@ -90,8 +90,8 @@ public class HourGlass {
 		return false;
 	}
 
-	private boolean insideGlass(double x, double y, double z) {
-		return distanceToCenter(x, y, z) < R;
+	private boolean insideGlass(double x, double y, double z, double r) {
+		return distanceToCenter(x, y, z) < R - r;
 	}
 
 	private double distanceToCenter(double x, double y, double z) {
