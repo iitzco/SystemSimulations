@@ -14,15 +14,17 @@ public class Beeman implements IntegralMethod {
 	}
 
 	public Particle moveParticle(Particle p, Set<Particle> set) {
-		Particle nextP = new Particle(p.id, p.r, p.x, p.y, p.mass);
+		Particle nextP = new Particle(p.id, p.r, p.x, p.y, p.z, p.mass);
 		nextP.prevSpeedX = p.speedX;
 		nextP.prevSpeedY = p.speedX;
+		nextP.prevSpeedZ = p.speedZ;
 
 		setPositions(nextP, p, set);
 		setSpeeds(nextP, p, set);
 
 		nextP.prevAccX = p.fX / p.mass;
 		nextP.prevAccY = p.fY / p.mass;
+		nextP.prevAccZ = p.fZ / p.mass;
 
 		return nextP;
 	}
@@ -34,6 +36,8 @@ public class Beeman implements IntegralMethod {
 				+ (5.0 / 6) * (accelerator.getForceX(p, set) / m) * deltaT - (1.0 / 6) * p.prevAccX * deltaT;
 		nextP.speedY = p.speedY + (1.0 / 3) * (accelerator.getForceY(p, set) / m) * deltaT
 				+ (5.0 / 6) * (accelerator.getForceY(p, set) / m) * deltaT - (1.0 / 6) * p.prevAccY * deltaT;
+		nextP.speedZ = p.speedZ + (1.0 / 3) * (accelerator.getForceZ(p, set) / m) * deltaT
+				+ (5.0 / 6) * (accelerator.getForceZ(p, set) / m) * deltaT - (1.0 / 6) * p.prevAccZ * deltaT;
 
 	}
 
@@ -44,6 +48,8 @@ public class Beeman implements IntegralMethod {
 				- (1.0 / 6) * p.prevAccX * Math.pow(deltaT, 2);
 		nextP.y = p.y + p.speedY * deltaT + (2.0 / 3) * (accelerator.getForceY(p, set) / m) * Math.pow(deltaT, 2)
 				- (1.0 / 6) * p.prevAccY * Math.pow(deltaT, 2);
+		nextP.z = p.z + p.speedZ * deltaT + (2.0 / 3) * (accelerator.getForceZ(p, set) / m) * Math.pow(deltaT, 2)
+				- (1.0 / 6) * p.prevAccZ * Math.pow(deltaT, 2);
 
 	}
 

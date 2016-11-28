@@ -1,6 +1,11 @@
 package itba.ss.TPF_HourGlass;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class HourGlass {
 
@@ -9,10 +14,7 @@ public class HourGlass {
 	static final double MASS = 0.01;
 	static final double MAX_TRIES = 10000;
 
-	static final double DISTANCE_BOTTOM = 1;
-
-	double L;
-	double W;
+	double R;
 	double D;
 
 	double m = 0.01;
@@ -33,11 +35,10 @@ public class HourGlass {
 
 	IntegralMethod integralMethod;
 
-	public HourGlass(double l, double w, double d, double tf, double dT, double dT2, boolean open,
-			int maxParticles, IntegralMethod integralMethod) {
+	public HourGlass(double r, double d, double tf, double dT, double dT2, boolean open, int maxParticles,
+			IntegralMethod integralMethod) {
 		super();
-		L = l;
-		W = w;
+		R = r;
 		D = d;
 
 		this.tf = tf;
@@ -61,56 +62,68 @@ public class HourGlass {
 		while (flag && particles.size() < size) {
 			double diameter = Math.random() * (this.D / 5 - this.D / 7) + (this.D / 7);
 			double r = diameter / 2;
-			double x = 0, y = 0;
+			double x = 0, y = 0, z = 0;
 			int tries = 0;
 			do {
-				x = Math.random() * (this.W - 2 * r) + r;
-				y = Math.random() * (this.L - 2 * r) + r + (DISTANCE_BOTTOM + D / 5);
+				x = Math.random() * (this.R * 2 - 2 * r) - R + r;
+				y = Math.random() * (this.R * 2 - 2 * r) - R + r;
+				z = Math.random() * (this.R - 2 * r) + r;
 				tries++;
 				if (tries == MAX_TRIES) {
 					flag = false;
 					break;
 				}
-			} while (overlap(x, y, diameter / 2));
+			} while (overlap(x, y, z, r) || !insideGlass(x, y, z));
 			if (flag) {
-				Particle p = new Particle(id++, diameter / 2, x, y, 0, 0, MASS);
+				Particle p = new Particle(id++, diameter / 2, x, y, z, 0, 0, 0, MASS);
 				this.particles.add(p);
 			}
 		}
 		this.N = this.particles.size();
 	}
 
-	private boolean overlap(double x, double y, double r) {
+	private boolean overlap(double x, double y, double z, double r) {
 		for (Particle p : particles) {
-			if (getDistance(p.x, p.y, x, y) < (p.r + r))
+			if (getDistance(p.x, p.y, p.z, x, y, z) < (p.r + r))
 				return true;
 		}
 		return false;
 	}
 
-	private double getDistance(double x0, double y0, double x1, double y1) {
-		return Math.sqrt(Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2));
+	private boolean insideGlass(double x, double y, double z) {
+		return distanceToCenter(x, y, z) < R;
 	}
 
-	public void run(int option) {
+	private double distanceToCenter(double x, double y, double z) {
+		return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z - R, 2));
+	}
+
+	private double distanceToCenter(Particle p) {
+		return distanceToCenter(p.x, p.y, p.z);
+	}
+
+	private double getDistance(double x0, double y0, double z0, double x1, double y1, double z1) {
+		return Math.sqrt(Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2) + Math.pow(z0 - z1, 2));
+	}
+
+	private boolean inContact(Particle p1, Particle p2) {
+		return getDistance(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) < (p1.r + p2.r);
+	}
+
+	private double getMagnitude(double x, double y, double z) {
+		return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2));
+	}
+
+	public void run() {
 		double currentTime = 0;
 
-		CellIndexMethod method = new CellIndexMethod(2 * (this.L + (DISTANCE_BOTTOM + D / 5)), this.D / 5, false);
 		int iteration = 0;
 		while (currentTime < tf) {
-			checkRelocation();
 
-			try {
-				method.load(new HashSet<>(this.particles));
-			} catch (IndexOutOfBoundsException e) {
-				System.err.println("Delta T was too big. Try with smaller");
-				System.exit(1);
-			}
-			Map<Particle, Set<Particle>> neighbors = method.findNeighbors();
+			// TODO -> cell_index method and then remember to filter neighbors!
+			Map<Particle, Set<Particle>> neighbors = findNeighbors();
 
 			List<Particle> nextGen = new ArrayList<>();
-
-			neighbors = filterNeighbors(neighbors);
 
 			addWallParticles(neighbors);
 
@@ -119,20 +132,7 @@ public class HourGlass {
 				nextGen.add(p);
 			}
 			if (Math.abs(currentTime / dt2 - Math.round(currentTime / dt2)) < EPSILON) {
-				double roundOff = Math.round(currentTime * 1000.0) / 1000.0;
-				switch (option) {
-				case 0:
-					printOvitoState(iteration, neighbors);
-					break;
-				case 1:
-					double energy = getEnergy();
-					System.out.println(roundOff + "\t" + energy + "\t" + (energy * particles.size()));
-					break;
-				case 2:
-					System.out.println(roundOff + "\t" + caudal);
-					caudal = 0;
-					break;
-				}
+				printOvitoState(iteration, neighbors);
 			}
 			this.particles = nextGen;
 			currentTime += dt;
@@ -140,185 +140,79 @@ public class HourGlass {
 		}
 	}
 
-	private double getEnergy() {
-		double ret = 0;
-		for (Particle particle : particles) {
-			ret += (1.0 / 2) * particle.mass * (Math.pow(particle.speedX, 2) + Math.pow(particle.speedY, 2));
-		}
-		return ret / particles.size();
-	}
-
-	private void checkRelocation() {
-		for (Particle particle : particles) {
-			if (particle.y - particle.r < D / 5) {
-				relocateParticle(particle);
-				caudal++;
-			}
-		}
-	}
-
 	private void addWallParticles(Map<Particle, Set<Particle>> neighbors) {
 		for (Particle particle : particles) {
-			List<Particle> newParticles = getContactParticles(particle);
-			neighbors.get(particle).addAll(newParticles);
+			Particle newParticle = getContactParticle(particle);
+			if (newParticle != null)
+				neighbors.get(particle).add(newParticle);
 		}
 	}
 
-	private void relocateParticle(Particle particle) {
-		particle.speedX = 0;
-		particle.speedY = 0;
-		particle.prevSpeedX = 0;
-		particle.prevSpeedY = 0;
-		particle.prevAccX = 0;
-		particle.prevAccY = 0;
-		particle.x = Math.random() * (this.W - 2 * particle.r) + particle.r;
-		Particle max = findHighestParticle(particle.x, particle.r);
-		double y = 0;
-		if (max == null) {
-			y = L;
-		} else {
-			y = Math.max(max.y + max.r, L);
-		}
-		particle.y = y + 2 * particle.r;
-
-	}
-
-	private Particle findHighestParticle(double x, double r) {
-		double aux = 0;
+	private Particle getContactParticle(Particle particle) {
 		Particle p = null;
-		for (Particle particle : particles) {
-			if (Math.abs(particle.x - x) < particle.r + r && particle.y > aux) {
-				aux = particle.y;
-				p = particle;
-			}
+
+		double d = distanceToCenter(particle);
+		if (d > (R - particle.r) && d < (R + particle.r)) {
+			double vecX = particle.x;
+			double vecY = particle.y;
+			double vecZ = particle.z - R;
+
+			double magnitude = getMagnitude(vecX, vecY, vecZ);
+
+			double normVecX = vecX / magnitude;
+			double normVecY = vecY / magnitude;
+			double normVecZ = vecZ / magnitude;
+
+			double x = normVecX * (R + particle.r);
+			double y = normVecY * (R + particle.r);
+			double z = normVecZ * (R + particle.r);
+
+			p = new Particle(0, particle.r, particle.mass);
+			p.isWall = true;
+			p.x = x;
+			p.y = y;
+			p.z = z + R;
+			p.speedX = 0;
+			p.speedY = 0;
+			p.speedZ = 0;
+			// System.err.println(getDistance(p.x, p.y, p.z, particle.x,
+			// particle.y, particle.z));
 		}
 		return p;
-	}
-
-	private List<Particle> getContactParticles(Particle particle) {
-		List<Particle> ret = new ArrayList<>();
-		Particle p = null;
-
-		if (particle.x - particle.r < 0) {
-			p = new Particle(0, particle.r, particle.mass);
-			p.isWall = true;
-			p.x = -particle.r;
-			p.y = particle.y;
-			p.speedX = 0;
-			p.speedY = 0;
-			ret.add(p);
-		} else if (particle.x + particle.r >= W) {
-			p = new Particle(0, particle.r, particle.mass);
-			p.isWall = true;
-			p.x = W + particle.r;
-			p.y = particle.y;
-			p.speedX = 0;
-			p.speedY = 0;
-			ret.add(p);
-		}
-		if (this.open) {
-			if (Math.abs(particle.y - (DISTANCE_BOTTOM + D / 5)) < particle.r) {
-				if (particle.x <= (W / 2 - D / 2) || particle.x >= (W / 2 + D / 2)) {
-					p = new Particle(0, particle.r, particle.mass);
-					p.isWall = true;
-					p.y = (DISTANCE_BOTTOM + D / 5) - particle.r;
-					p.x = particle.x;
-					p.speedX = 0;
-					p.speedY = 0;
-					ret.add(p);
-				} else if (particle.x - particle.r <= (W / 2 - D / 2) && getDistance(particle.x, particle.y,
-						(W / 2 - D / 2), (DISTANCE_BOTTOM + D / 5)) < particle.r) {
-					p = new Particle(0, 0, particle.mass);
-					p.y = (DISTANCE_BOTTOM + D / 5);
-					p.x = (W / 2 - D / 2);
-					p.isWall = true;
-					p.speedX = 0;
-					p.speedY = 0;
-					ret.add(p);
-				} else if (particle.x + particle.r >= (W / 2 + D / 2) && getDistance(particle.x, particle.y,
-						(W / 2 + D / 2), (DISTANCE_BOTTOM + D / 5)) < particle.r) {
-					p = new Particle(0, 0, particle.mass);
-					p.y = (DISTANCE_BOTTOM + D / 5);
-					p.x = (W / 2 + D / 2);
-					p.speedX = 0;
-					p.isWall = true;
-					p.speedY = 0;
-					ret.add(p);
-				}
-			}
-		} else {
-			if (particle.y - particle.r < (DISTANCE_BOTTOM + D / 5)) {
-				p = new Particle(0, particle.r, particle.mass);
-				p.isWall = true;
-				p.x = particle.x;
-				p.y = (DISTANCE_BOTTOM + D / 5) - particle.r;
-				p.speedX = 0;
-				p.speedY = 0;
-				ret.add(p);
-			}
-		}
-		return ret;
 
 	}
 
-	public Map<Particle, Set<Particle>> filterNeighbors(Map<Particle, Set<Particle>> original) {
+	private Map<Particle, Set<Particle>> findNeighbors() {
 		Map<Particle, Set<Particle>> ret = new HashMap<>();
-		for (Particle particle : original.keySet()) {
-			HashSet<Particle> set = new HashSet<>();
-			for (Particle neighbor : original.get(particle)) {
-				if (getDistance(particle.x, particle.y, neighbor.x, neighbor.y) <= (particle.r + neighbor.r)) {
-					set.add(neighbor);
+		for (Particle p1 : particles) {
+			if (!ret.containsKey(p1))
+				ret.put(p1, new HashSet<>());
+			for (Particle p2 : particles) {
+				if (p1.id != p2.id && inContact(p1, p2)) {
+					if (!ret.get(p1).contains(p2)) {
+						ret.get(p1).add(p2);
+						if (!ret.containsKey(p2))
+							ret.put(p2, new HashSet<>());
+						ret.get(p2).add(p1);
+					}
 				}
 			}
-			ret.put(particle, set);
 		}
 		return ret;
 	}
 
 	public void printOvitoState(int iteration, Map<Particle, Set<Particle>> otherp) {
 
-		List<Particle> walls = new LinkedList<Particle>();
-		System.out.println(particles.size() + 4 + walls.size());
+		System.out.println(particles.size());
 		System.out.println("t " + iteration);
 
-		double max_speed = findMaxSpeed();
-
 		for (Particle p : particles) {
-			double relative_speed = 1;
-			if (max_speed > 0) {
-				relative_speed = Math.sqrt(Math.pow(p.speedX, 2) + Math.pow(p.speedY, 2)) / max_speed;
-			}
-			System.out.println(
-					p.id + "\t" + p.x + "\t" + p.y + "\t" + p.r + "\t" + p.mass + "\t" + relative_speed + "\t 0\t 1");
+			System.out.println(p.id + "\t" + p.x + "\t" + p.y + "\t" + p.z + "\t" + p.r + "\t" + p.mass);
 		}
-		System.out.println(particles.size() + "\t" + 0 + "\t" + 0 + "\t" + 0 + "\t" + MASS + "\t 0\t0\t 0");
-		System.out.println(particles.size() + 1 + "\t" + W + "\t" + 0 + "\t" + 0 + "\t" + MASS + "\t 0\t 0\t 1");
-		System.out.println(particles.size() + 2 + "\t" + 0 + "\t" + L + "\t" + 0 + "\t" + MASS + "\t 0\t 0\t 1");
-		System.out.println(particles.size() + 3 + "\t" + W + "\t" + L + "\t" + 0 + "\t" + MASS + "\t 0\t 0\t 1");
-	}
-
-	private double findMaxSpeed() {
-		double ret = 0;
-		for (Particle particle : particles) {
-			double speed = Math.sqrt(Math.pow(particle.speedX, 2) + Math.pow(particle.speedY, 2));
-			if (speed > ret) {
-				ret = speed;
-			}
-		}
-		return ret;
-	}
-
-	public double totalArea() {
-		double ret = 0;
-		for (Particle particle : particles) {
-			ret += Math.PI * particle.r * particle.r;
-		}
-		return ret;
 	}
 
 	public static void main(String[] args) {
-		double L = 10;
-		double W = 5;
+		double R = 10;
 		double D = 2;
 
 		double tf = 5;
@@ -333,43 +227,26 @@ public class HourGlass {
 		int option = 0;
 
 		try {
-			L = Double.valueOf(args[0]);
-			W = Double.valueOf(args[1]);
-			D = Double.valueOf(args[2]);
-			deltaT = Double.valueOf(args[3]);
-			deltaT2 = Double.valueOf(args[4]);
-			tf = Double.valueOf(args[5]);
-			kn = Double.valueOf(args[6]);
-			kt = Double.valueOf(args[7]);
-			if (args[8].toLowerCase().equals("open"))
-				open = true;
-			else if (args[8].toLowerCase().equals("closed"))
-				open = false;
-			else
-				throw new Exception();
-			if (args[9].toLowerCase().equals("ovito"))
-				option = 0;
-			else if (args[9].toLowerCase().equals("energy"))
-				option = 1;
-			else if (args[9].toLowerCase().equals("flow"))
-				option = 2;
-			else
-				throw new Exception();
-			if (args.length == 11) {
-				maxParticles = Integer.valueOf(args[10]);
+			R = Double.valueOf(args[0]);
+			D = Double.valueOf(args[1]);
+			deltaT = Double.valueOf(args[2]);
+			deltaT2 = Double.valueOf(args[3]);
+			tf = Double.valueOf(args[4]);
+			kn = Double.valueOf(args[5]);
+			kt = Double.valueOf(args[6]);
+			if (args.length == 8) {
+				maxParticles = Integer.valueOf(args[7]);
 			}
 		} catch (Exception e) {
-			System.err.println(
-					"Wrong Parameters. Expect L W D deltaT deltaT2 tf kn kt [open|closed] [ovito|energy|flow] (maxParticles)");
+			System.err.println("Wrong Parameters. Expect R D deltaT deltaT2 tf kn kt (maxParticles)");
 			return;
 		}
 
 		Accelerator accelerator = new GranularAccelerator(kn, kt);
 		IntegralMethod integralMethod = new Beeman(deltaT, accelerator);
 
-		HourGlass g = new HourGlass(L, W, D, tf, deltaT, deltaT2, open, maxParticles,
-				integralMethod);
-		g.run(option);
+		HourGlass g = new HourGlass(R, D, tf, deltaT, deltaT2, open, maxParticles, integralMethod);
+		g.run();
 
 	}
 }
