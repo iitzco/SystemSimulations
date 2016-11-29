@@ -62,12 +62,12 @@ public class GranularAccelerator implements Accelerator {
 	}
 
 	private double getFN(Particle p, Particle other) {
-		return -kn * getEpsilon(p, other);
+		return (-kn * getEpsilon(p, other)) - (kt * getEpsilonPrima(p, other));
 	}
 
-	private double getRelativeSpeed(Particle p, Particle other) {
-		return (Math.sqrt(Math.pow(p.speedX, 2) + Math.pow(p.speedY, 2) + Math.pow(p.speedZ, 2)))
-				- (Math.sqrt(Math.pow(other.speedX, 2) + Math.pow(other.speedY, 2) + Math.pow(other.speedZ, 2)));
+	private double getEpsilonPrima(Particle p, Particle other) {
+		return ((p.speedX - other.speedX) * getENX(p, other)) + ((p.speedY - other.speedY) * getENY(p, other))
+				+ ((p.speedZ - other.speedZ) * getENZ(p, other));
 	}
 
 	private double getEpsilon(Particle p, Particle other) {

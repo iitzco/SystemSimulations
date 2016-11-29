@@ -35,6 +35,8 @@ public class HourGlass {
 
 	IntegralMethod integralMethod;
 
+	List<Particle> bounds;
+
 	public HourGlass(double r, double d, double tf, double dT, double dT2, boolean open, int maxParticles,
 			IntegralMethod integralMethod) {
 		super();
@@ -107,7 +109,7 @@ public class HourGlass {
 	}
 
 	private boolean inContact(Particle p1, Particle p2) {
-		return getDistance(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) < (p1.r + p2.r);
+		return getDistance(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z) <= (p1.r + p2.r);
 	}
 
 	private double getMagnitude(double x, double y, double z) {
@@ -175,8 +177,6 @@ public class HourGlass {
 			p.speedX = 0;
 			p.speedY = 0;
 			p.speedZ = 0;
-			// System.err.println(getDistance(p.x, p.y, p.z, particle.x,
-			// particle.y, particle.z));
 		}
 		return p;
 
@@ -202,37 +202,40 @@ public class HourGlass {
 	}
 
 	public void printOvitoState(int iteration, Map<Particle, Set<Particle>> otherp) {
-		List<Particle> bounds = createBounds(particles.size());
 
+		createBounds(particles.size());
 		System.out.println(particles.size() + bounds.size());
 		System.out.println("t " + iteration);
 
 		for (Particle p : particles) {
 			System.out.println(p.id + "\t" + p.x + "\t" + p.y + "\t" + p.z + "\t" + p.r + "\t" + p.mass + "\t" + 0);
 		}
+
 		for (Particle p : bounds) {
 			System.out.println(p.id + "\t" + p.x + "\t" + p.y + "\t" + p.z + "\t" + p.r + "\t" + p.mass + "\t" + 0.5);
 		}
 	}
 
-	private List<Particle> createBounds(int size) {
-		int base = size;
-		Particle p = null;
-		List<Particle> ret = new ArrayList<>();
-		p = new Particle(base++, D / 10, 0, 0, 0, 0, 0, 0, MASS);
-		ret.add(p);
-		for (double i = R / 10.0; i < R; i += (R / 10.0)) {
-			double z = -1 * (Math.sqrt(Math.pow(R, 2) - 2 * Math.pow(i, 2))) + R;
-			p = new Particle(base++, D / 10, i, i, z, 0, 0, 0, MASS);
-			ret.add(p);
-			p = new Particle(base++, D / 10, -i, i, z, 0, 0, 0, MASS);
-			ret.add(p);
-			p = new Particle(base++, D / 10, i, -i, z, 0, 0, 0, MASS);
-			ret.add(p);
-			p = new Particle(base++, D / 10, -i, -i, z, 0, 0, 0, MASS);
-			ret.add(p);
+	private void createBounds(int size) {
+		if (bounds == null) {
+			bounds = new ArrayList<>();
+			int base = size;
+			double r = D / 100.0;
+			double percentage = 50.0;
+			Particle p = null;
+			p = new Particle(base++, r, 0, 0, 0, 0, 0, 0, MASS);
+			bounds.add(p);
+			for (double i = R / percentage; i < R; i += (R / percentage)) {
+				double z = -1 * (Math.sqrt(Math.pow(R, 2) - Math.pow(i, 2))) + R;
+				for (double j = -i; j <= i; j += (i / percentage)) {
+					double y = Math.sqrt(Math.pow(i, 2) - Math.pow(j, 2));
+					p = new Particle(base++, r, j, y, z, 0, 0, 0, MASS);
+					bounds.add(p);
+					p = new Particle(base++, r, j, -y, z, 0, 0, 0, MASS);
+					bounds.add(p);
+				}
+			}
 		}
-		return ret;
 	}
 
 	public static void main(String[] args) {
