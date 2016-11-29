@@ -65,6 +65,11 @@ public class GranularAccelerator implements Accelerator {
 		return -kn * getEpsilon(p, other);
 	}
 
+	private double getRelativeSpeed(Particle p, Particle other) {
+		return (Math.sqrt(Math.pow(p.speedX, 2) + Math.pow(p.speedY, 2) + Math.pow(p.speedZ, 2)))
+				- (Math.sqrt(Math.pow(other.speedX, 2) + Math.pow(other.speedY, 2) + Math.pow(other.speedZ, 2)));
+	}
+
 	private double getEpsilon(Particle p, Particle other) {
 		return p.r + other.r - (getDistance(p.x, p.y, p.z, other.x, other.y, other.z));
 	}

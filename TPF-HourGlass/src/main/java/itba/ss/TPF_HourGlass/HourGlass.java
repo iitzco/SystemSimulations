@@ -202,13 +202,37 @@ public class HourGlass {
 	}
 
 	public void printOvitoState(int iteration, Map<Particle, Set<Particle>> otherp) {
+		List<Particle> bounds = createBounds(particles.size());
 
-		System.out.println(particles.size());
+		System.out.println(particles.size() + bounds.size());
 		System.out.println("t " + iteration);
 
 		for (Particle p : particles) {
-			System.out.println(p.id + "\t" + p.x + "\t" + p.y + "\t" + p.z + "\t" + p.r + "\t" + p.mass);
+			System.out.println(p.id + "\t" + p.x + "\t" + p.y + "\t" + p.z + "\t" + p.r + "\t" + p.mass + "\t" + 0);
 		}
+		for (Particle p : bounds) {
+			System.out.println(p.id + "\t" + p.x + "\t" + p.y + "\t" + p.z + "\t" + p.r + "\t" + p.mass + "\t" + 0.5);
+		}
+	}
+
+	private List<Particle> createBounds(int size) {
+		int base = size;
+		Particle p = null;
+		List<Particle> ret = new ArrayList<>();
+		p = new Particle(base++, D / 10, 0, 0, 0, 0, 0, 0, MASS);
+		ret.add(p);
+		for (double i = R / 10.0; i < R; i += (R / 10.0)) {
+			double z = -1 * (Math.sqrt(Math.pow(R, 2) - 2 * Math.pow(i, 2))) + R;
+			p = new Particle(base++, D / 10, i, i, z, 0, 0, 0, MASS);
+			ret.add(p);
+			p = new Particle(base++, D / 10, -i, i, z, 0, 0, 0, MASS);
+			ret.add(p);
+			p = new Particle(base++, D / 10, i, -i, z, 0, 0, 0, MASS);
+			ret.add(p);
+			p = new Particle(base++, D / 10, -i, -i, z, 0, 0, 0, MASS);
+			ret.add(p);
+		}
+		return ret;
 	}
 
 	public static void main(String[] args) {
