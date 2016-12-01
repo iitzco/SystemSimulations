@@ -233,15 +233,18 @@ public class HourGlass {
 			double r = D / 100.0;
 			double percentage = 50.0;
 			Particle p = null;
-			p = new Particle(base++, r, 0, 0, 0, 0, 0, 0, MASS);
-			bounds.add(p);
-			for (double i = R / percentage; i < R; i += (R / percentage)) {
-				double z = -1 * (Math.sqrt(Math.pow(R, 2) - Math.pow(i, 2))) + TOP;
+			for (double i = Math.sqrt(Math.pow(R, 2) - Math.pow(TOP, 2)); i < R; i += (R / percentage)) {
+				double z1 = -1 * (Math.sqrt(Math.pow(R, 2) - Math.pow(i, 2))) + TOP;
+				double z2 = -1 * z1;
 				for (double j = -i; j <= i; j += (i / percentage)) {
 					double y = Math.sqrt(Math.pow(i, 2) - Math.pow(j, 2));
-					p = new Particle(base++, r, j, y, z, 0, 0, 0, MASS);
+					p = new Particle(base++, r, j, y, z1, 0, 0, 0, MASS);
 					bounds.add(p);
-					p = new Particle(base++, r, j, -y, z, 0, 0, 0, MASS);
+					p = new Particle(base++, r, j, y, z2, 0, 0, 0, MASS);
+					bounds.add(p);
+					p = new Particle(base++, r, j, -y, z1, 0, 0, 0, MASS);
+					bounds.add(p);
+					p = new Particle(base++, r, j, -y, z2, 0, 0, 0, MASS);
 					bounds.add(p);
 				}
 			}
