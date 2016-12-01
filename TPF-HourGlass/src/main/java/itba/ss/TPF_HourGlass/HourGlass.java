@@ -17,6 +17,11 @@ public class HourGlass {
 	double R;
 	double D;
 
+	double MARGIN = 0.95;
+
+	double TOP;
+	double BOTTOM;
+
 	double m = 0.01;
 
 	double tf;
@@ -42,6 +47,9 @@ public class HourGlass {
 		super();
 		R = r;
 		D = d;
+
+		TOP = MARGIN * R;
+		BOTTOM = -TOP;
 
 		this.tf = tf;
 		this.dt = dT;
@@ -69,7 +77,9 @@ public class HourGlass {
 			do {
 				x = Math.random() * (this.R * 2 - 2 * r) - R + r;
 				y = Math.random() * (this.R * 2 - 2 * r) - R + r;
-				z = Math.random() * (this.R - 2 * r) + r;
+
+				z = (Math.random() * (this.R - 2 * r) + r) - ((1 - MARGIN) * R);
+
 				tries++;
 				if (tries == MAX_TRIES) {
 					flag = false;
@@ -97,7 +107,7 @@ public class HourGlass {
 	}
 
 	private double distanceToCenter(double x, double y, double z) {
-		return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z - R, 2));
+		return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z - TOP, 2));
 	}
 
 	private double distanceToCenter(Particle p) {
@@ -157,7 +167,7 @@ public class HourGlass {
 		if (d > (R - particle.r) && d < (R + particle.r)) {
 			double vecX = particle.x;
 			double vecY = particle.y;
-			double vecZ = particle.z - R;
+			double vecZ = particle.z - TOP;
 
 			double magnitude = getMagnitude(vecX, vecY, vecZ);
 
@@ -173,7 +183,7 @@ public class HourGlass {
 			p.isWall = true;
 			p.x = x;
 			p.y = y;
-			p.z = z + R;
+			p.z = z + TOP;
 			p.speedX = 0;
 			p.speedY = 0;
 			p.speedZ = 0;
@@ -226,7 +236,7 @@ public class HourGlass {
 			p = new Particle(base++, r, 0, 0, 0, 0, 0, 0, MASS);
 			bounds.add(p);
 			for (double i = R / percentage; i < R; i += (R / percentage)) {
-				double z = -1 * (Math.sqrt(Math.pow(R, 2) - Math.pow(i, 2))) + R;
+				double z = -1 * (Math.sqrt(Math.pow(R, 2) - Math.pow(i, 2))) + TOP;
 				for (double j = -i; j <= i; j += (i / percentage)) {
 					double y = Math.sqrt(Math.pow(i, 2) - Math.pow(j, 2));
 					p = new Particle(base++, r, j, y, z, 0, 0, 0, MASS);
