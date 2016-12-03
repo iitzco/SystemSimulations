@@ -13,12 +13,13 @@ This will generate **.jar** file in the *target* folder.
 To run, execute:
 
 ```bash
-$ java -jar TPF-HourGlass-0.0.1-SNAPSHOT.jar R D deltaT deltaT2 tf kn g (maxParticles)
+$ java -jar TPF-HourGlass-0.0.1-SNAPSHOT.jar R D S deltaT deltaT2 tf kn g (maxParticles)
 ```
 
 Where:
 * R is the semisphere radius
 * D defines particle's radio (between D/7 and D/5)
+* S defines the hole's radius
 * deltaT is the time step of the simulation
 * deltaT2 is the time step for the animation or the data collection
 * tf is the simulation's total time
@@ -29,7 +30,7 @@ Where:
 Example:
 
 ```bash
-$ java -jar TPF-HourGlass-0.0.1-SNAPSHOT.jar 1 0.5 0.00001 0.02 10 1E4 100 1
+$ java -jar TPF-HourGlass-0.0.1-SNAPSHOT.jar 1 1 0.25 0.00001 0.02 10 1E4 100 1
 ```
 
 **IMPORTANT** deltaT should be more or less 0.00001. Higher values will introduce errors in the integration method.

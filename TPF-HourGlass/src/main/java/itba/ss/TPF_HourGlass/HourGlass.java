@@ -17,7 +17,7 @@ public class HourGlass {
 	double R;
 	double D;
 
-	double MARGIN = 0.95;
+	double MARGIN;
 
 	double TOP;
 	double BOTTOM;
@@ -42,14 +42,17 @@ public class HourGlass {
 
 	List<Particle> bounds;
 
-	public HourGlass(double r, double d, double tf, double dT, double dT2, boolean open, int maxParticles,
+	public HourGlass(double r, double d, double s, double tf, double dT, double dT2, boolean open, int maxParticles,
 			IntegralMethod integralMethod) {
 		super();
 		R = r;
 		D = d;
 
-		TOP = MARGIN * R;
+		TOP = Math.sqrt(Math.pow(R, 2) - Math.pow(s, 2));
+
 		BOTTOM = -TOP;
+
+		MARGIN = TOP / R;
 
 		this.tf = tf;
 		this.dt = dT;
@@ -290,14 +293,15 @@ public class HourGlass {
 	}
 
 	public static void main(String[] args) {
-		double R = 10;
-		double D = 2;
+		double R = 1;
+		double D = 1;
+		double S = 0.25;
 
-		double tf = 5;
+		double tf = 1;
 		double deltaT = 0.000001;
 		double deltaT2 = 0.02;
-		double kn = 1E5;
-		double kt = 2 * kn;
+		double kn = 1E4;
+		double gamma = 100;
 
 		int maxParticles = Integer.MAX_VALUE;
 
@@ -306,23 +310,24 @@ public class HourGlass {
 		try {
 			R = Double.valueOf(args[0]);
 			D = Double.valueOf(args[1]);
-			deltaT = Double.valueOf(args[2]);
-			deltaT2 = Double.valueOf(args[3]);
-			tf = Double.valueOf(args[4]);
-			kn = Double.valueOf(args[5]);
-			kt = Double.valueOf(args[6]);
-			if (args.length == 8) {
-				maxParticles = Integer.valueOf(args[7]);
+			S = Double.valueOf(args[2]);
+			deltaT = Double.valueOf(args[3]);
+			deltaT2 = Double.valueOf(args[4]);
+			tf = Double.valueOf(args[5]);
+			kn = Double.valueOf(args[6]);
+			gamma = Double.valueOf(args[7]);
+			if (args.length == 9) {
+				maxParticles = Integer.valueOf(args[8]);
 			}
 		} catch (Exception e) {
-			System.err.println("Wrong Parameters. Expect R D deltaT deltaT2 tf kn kt (maxParticles)");
+			System.err.println("Wrong Parameters. Expect R D S deltaT deltaT2 tf kn kt (maxParticles)");
 			return;
 		}
 
-		Accelerator accelerator = new GranularAccelerator(kn, kt);
+		Accelerator accelerator = new GranularAccelerator(kn, gamma);
 		IntegralMethod integralMethod = new Beeman(deltaT, accelerator);
 
-		HourGlass g = new HourGlass(R, D, tf, deltaT, deltaT2, open, maxParticles, integralMethod);
+		HourGlass g = new HourGlass(R, D, S, tf, deltaT, deltaT2, open, maxParticles, integralMethod);
 		g.run();
 
 	}

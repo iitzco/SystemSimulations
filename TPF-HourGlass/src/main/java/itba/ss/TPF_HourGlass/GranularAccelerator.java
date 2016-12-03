@@ -5,13 +5,13 @@ import java.util.Set;
 public class GranularAccelerator implements Accelerator {
 
 	private double kn;
-	private double kt;
+	private double gamma;
 	private static final double G = -10;
 
-	public GranularAccelerator(double kn, double kt) {
+	public GranularAccelerator(double kn, double gamma) {
 		super();
 		this.kn = kn;
-		this.kt = kt;
+		this.gamma = gamma;
 	}
 
 	public double getForceX(Particle p, Set<Particle> set) {
@@ -62,7 +62,7 @@ public class GranularAccelerator implements Accelerator {
 	}
 
 	private double getFN(Particle p, Particle other) {
-		return (-kn * getEpsilon(p, other)) - (kt * getEpsilonPrima(p, other));
+		return (-kn * getEpsilon(p, other)) - (gamma * getEpsilonPrima(p, other));
 	}
 
 	private double getEpsilonPrima(Particle p, Particle other) {
