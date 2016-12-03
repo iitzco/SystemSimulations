@@ -103,15 +103,23 @@ public class HourGlass {
 	}
 
 	private boolean insideGlass(double x, double y, double z, double r) {
-		return distanceToCenter(x, y, z) < R - r;
+		return distanceToCenterTop(x, y, z) < R - r;
 	}
 
-	private double distanceToCenter(double x, double y, double z) {
+	private double distanceToCenterTop(double x, double y, double z) {
 		return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z - TOP, 2));
 	}
 
-	private double distanceToCenter(Particle p) {
-		return distanceToCenter(p.x, p.y, p.z);
+	private double distanceToCenterBottom(double x, double y, double z) {
+		return Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z - BOTTOM, 2));
+	}
+
+	private double distanceToCenterTop(Particle p) {
+		return distanceToCenterTop(p.x, p.y, p.z);
+	}
+
+	private double distanceToCenterBottom(Particle p) {
+		return distanceToCenterBottom(p.x, p.y, p.z);
 	}
 
 	private double getDistance(double x0, double y0, double z0, double x1, double y1, double z1) {
@@ -154,41 +162,60 @@ public class HourGlass {
 
 	private void addWallParticles(Map<Particle, Set<Particle>> neighbors) {
 		for (Particle particle : particles) {
-			Particle newParticle = getContactParticle(particle);
-			if (newParticle != null)
-				neighbors.get(particle).add(newParticle);
+			List<Particle> newParticles = getContactParticle(particle);
+			neighbors.get(particle).addAll(newParticles);
 		}
 	}
 
-	private Particle getContactParticle(Particle particle) {
+	private List<Particle> getContactParticle(Particle particle) {
+		List<Particle> ret = new ArrayList<>();
 		Particle p = null;
 
-		double d = distanceToCenter(particle);
-		if (d > (R - particle.r) && d < (R + particle.r)) {
-			double vecX = particle.x;
-			double vecY = particle.y;
-			double vecZ = particle.z - TOP;
+		int sign = particle.z >= 0 ? 1 : -1;
+		double bound = particle.z >= 0 ? TOP : BOTTOM;
 
-			double magnitude = getMagnitude(vecX, vecY, vecZ);
-
-			double normVecX = vecX / magnitude;
-			double normVecY = vecY / magnitude;
-			double normVecZ = vecZ / magnitude;
-
-			double x = normVecX * (R + particle.r);
-			double y = normVecY * (R + particle.r);
-			double z = normVecZ * (R + particle.r);
-
+		if (sign * (particle.z + sign * particle.r) > sign * bound) {
 			p = new Particle(0, particle.r, particle.mass);
 			p.isWall = true;
-			p.x = x;
-			p.y = y;
-			p.z = z + TOP;
+			p.x = particle.x;
+			p.y = particle.y;
+			p.z = bound + sign * particle.r;
 			p.speedX = 0;
 			p.speedY = 0;
 			p.speedZ = 0;
+
+			ret.add(p);
 		}
-		return p;
+		double levelZeroRadius = Math.sqrt(Math.pow(R, 2) - Math.pow(bound, 2));
+		if (Math.pow(particle.x, 2) + Math.pow(particle.y, 2) > Math.pow(levelZeroRadius, 2)) {
+			double d = sign == 1 ? distanceToCenterTop(particle) : distanceToCenterBottom(particle);
+			if (d > (R - particle.r) && d < (R + particle.r)) {
+				double vecX = particle.x;
+				double vecY = particle.y;
+				double vecZ = particle.z - bound;
+
+				double magnitude = getMagnitude(vecX, vecY, vecZ);
+
+				double normVecX = vecX / magnitude;
+				double normVecY = vecY / magnitude;
+				double normVecZ = vecZ / magnitude;
+
+				double x = normVecX * (R + particle.r);
+				double y = normVecY * (R + particle.r);
+				double z = normVecZ * (R + particle.r);
+
+				p = new Particle(0, particle.r, particle.mass);
+				p.isWall = true;
+				p.x = x;
+				p.y = y;
+				p.z = z + bound;
+				p.speedX = 0;
+				p.speedY = 0;
+				p.speedZ = 0;
+				ret.add(p);
+			}
+		}
+		return ret;
 
 	}
 
@@ -264,7 +291,6 @@ public class HourGlass {
 		int maxParticles = Integer.MAX_VALUE;
 
 		boolean open = true;
-		int option = 0;
 
 		try {
 			R = Double.valueOf(args[0]);
