@@ -275,6 +275,17 @@ public class HourGlass {
 					bounds.add(p);
 				}
 			}
+			for (double j = -R; j <= R; j += (R / percentage)) {
+				double y = Math.sqrt(Math.pow(R, 2) - Math.pow(j, 2));
+				p = new Particle(base++, r, j, y, TOP, 0, 0, 0, MASS);
+				bounds.add(p);
+				p = new Particle(base++, r, j, y, BOTTOM, 0, 0, 0, MASS);
+				bounds.add(p);
+				p = new Particle(base++, r, j, -y, TOP, 0, 0, 0, MASS);
+				bounds.add(p);
+				p = new Particle(base++, r, j, -y, BOTTOM, 0, 0, 0, MASS);
+				bounds.add(p);
+			}
 		}
 	}
 
