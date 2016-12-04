@@ -15,7 +15,6 @@ To run, execute:
 ```bash
 $ java -jar TPF-HourGlass-0.0.1-SNAPSHOT.jar R D S deltaT deltaT2 tf kn g (maxParticles)
 ```
-
 Where:
 * R is the semisphere radius
 * D defines particle's radio (between D/7 and D/5)
@@ -26,6 +25,8 @@ Where:
 * kn is normal constant
 * g is gamma value for damping
 * (maxParticles) is OPTIONAL to specify maximum amount of particles in the container.
+
+The output is in **xyz** format so that the simulation can be visualized in OVITO or similar tool.
 
 Example:
 
