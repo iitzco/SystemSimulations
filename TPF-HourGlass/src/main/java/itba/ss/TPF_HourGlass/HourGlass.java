@@ -44,6 +44,8 @@ public class HourGlass {
 
 	List<Particle> bounds;
 
+	List<Double> measuredTimes;
+
 	public HourGlass(double r, double d, double s, double tf, double dT, double dT2, boolean open, int maxParticles,
 			IntegralMethod integralMethod) {
 		super();
@@ -67,6 +69,8 @@ public class HourGlass {
 
 		this.integralMethod = integralMethod;
 
+		measuredTimes = new ArrayList<>();
+
 		locateParticles(maxParticles);
 	}
 
@@ -84,7 +88,6 @@ public class HourGlass {
 			do {
 				x = Math.random() * (this.R * 2 - 2 * r) - R + r;
 				y = Math.random() * (this.R * 2 - 2 * r) - R + r;
-
 				z = (Math.random() * (this.R - 2 * r) + r) - ((1 - MARGIN) * R);
 
 				tries++;
@@ -145,10 +148,13 @@ public class HourGlass {
 		double currentTime = 0;
 
 		int iteration = 0;
-
 		int iterationToRevertGravity = 0;
+		int flips = 0;
+
 		boolean allPassedHalf = true;
 		boolean existsFreeParticle = false;
+
+		double measuredTime = 0;
 
 		while (currentTime < tf) {
 
@@ -161,30 +167,40 @@ public class HourGlass {
 
 			allPassedHalf = true;
 			existsFreeParticle = false;
+
 			for (Particle particle : particles) {
 				Set<Particle> n = neighbors.get(particle);
 				Particle p = integralMethod.moveParticle(particle, n);
-				if (!passedHalf(p)) {
+				if (!passedHalf(p))
 					allPassedHalf = false;
-				}
-				if (n.size() == 0) {
+				if (n.size() == 0)
 					existsFreeParticle = true;
-				}
 				nextGen.add(p);
 			}
-			if (Math.abs(currentTime / dt2 - Math.round(currentTime / dt2)) < EPSILON) {
+
+			if (Math.abs(currentTime / dt2 - Math.round(currentTime / dt2)) < EPSILON)
 				printOvitoState(iteration, neighbors);
-			}
+
 			this.particles = nextGen;
 			currentTime += dt;
+			measuredTime += dt;
 			iteration++;
+
+			if (allPassedHalf && measuredTimes.size() == flips) {
+				System.err.println("Flip " + flips + ": " + measuredTime);
+				measuredTimes.add(measuredTime);
+			}
+
 			if (allPassedHalf && !existsFreeParticle)
 				iterationToRevertGravity++;
 			else
 				iterationToRevertGravity = 0;
+
 			if (iterationToRevertGravity == ITERATIONS_TO_REVERT_GRAVITY) {
 				integralMethod.getAccelerator().reverseGravity();
+				flips++;
 				iterationToRevertGravity = 0;
+				measuredTime = 0;
 			}
 		}
 	}
