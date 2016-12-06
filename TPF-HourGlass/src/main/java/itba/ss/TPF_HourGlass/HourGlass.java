@@ -220,8 +220,9 @@ public class HourGlass {
 			ret.add(p);
 		}
 		double levelZeroRadius = Math.sqrt(Math.pow(R, 2) - Math.pow(bound, 2));
-		if (Math.sqrt(Math.pow(particle.x, 2) + Math.pow(particle.y, 2)) + particle.r > levelZeroRadius) {
-			double d = sign == 1 ? distanceToCenterTop(particle) : distanceToCenterBottom(particle);
+		double distanceToVerticalLine = Math.sqrt(Math.pow(particle.x, 2) + Math.pow(particle.y, 2));
+		double d = sign == 1 ? distanceToCenterTop(particle) : distanceToCenterBottom(particle);
+		if (distanceToVerticalLine > levelZeroRadius) {
 			if (d > (R - particle.r) && d < (R + particle.r)) {
 				double vecX = particle.x;
 				double vecY = particle.y;
@@ -247,6 +248,35 @@ public class HourGlass {
 				p.speedZ = 0;
 				ret.add(p);
 			}
+		} else if (distanceToVerticalLine + particle.r > levelZeroRadius) {
+			if (d > (R - particle.r) && d < (R + particle.r)) {
+				double vecX = particle.x;
+				double vecY = particle.y;
+				double vecZ = 0;
+
+				double magnitude = getMagnitude(vecX, vecY, vecZ);
+
+				double normVecX = vecX / magnitude;
+				double normVecY = vecY / magnitude;
+
+				double x = normVecX * levelZeroRadius;
+				double y = normVecY * levelZeroRadius;
+
+				p = new Particle(0, 0, Double.MAX_VALUE);
+				p.isWall = true;
+				p.x = x;
+				p.y = y;
+				p.z = 0;
+				p.speedX = 0;
+				p.speedY = 0;
+				p.speedZ = 0;
+
+				// Check if point inside particle
+				if (Math.sqrt(Math.pow(p.x - particle.x, 2) + Math.pow(p.y - particle.y, 2)
+						+ Math.pow(p.z - particle.z, 2)) <= particle.r)
+					ret.add(p);
+			}
+
 		}
 		return ret;
 
