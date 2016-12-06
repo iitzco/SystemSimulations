@@ -10,4 +10,8 @@ public interface Accelerator {
 
 	public double getForceZ(Particle p, Set<Particle> set);
 
+	public void reverseGravity();
+
+	public double getGravity();
+
 }

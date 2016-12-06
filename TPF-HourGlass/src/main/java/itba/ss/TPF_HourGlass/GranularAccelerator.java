@@ -6,12 +6,13 @@ public class GranularAccelerator implements Accelerator {
 
 	private double kn;
 	private double gamma;
-	private static final double G = -10;
+	private double G;
 
 	public GranularAccelerator(double kn, double gamma) {
 		super();
 		this.kn = kn;
 		this.gamma = gamma;
+		this.G = -10;
 	}
 
 	public double getForceX(Particle p, Set<Particle> set) {
@@ -76,6 +77,15 @@ public class GranularAccelerator implements Accelerator {
 
 	private double getDistance(double x0, double y0, double z0, double x1, double y1, double z1) {
 		return Math.sqrt(Math.pow(x0 - x1, 2) + Math.pow(y0 - y1, 2) + Math.pow(z0 - z1, 2));
+	}
+
+	public void reverseGravity() {
+		this.G *= -1;
+	}
+
+	@Override
+	public double getGravity() {
+		return G;
 	}
 
 }

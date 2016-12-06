@@ -57,4 +57,9 @@ public class Beeman implements IntegralMethod {
 		return "Beeman";
 	}
 
+	@Override
+	public Accelerator getAccelerator() {
+		return accelerator;
+	}
+
 }

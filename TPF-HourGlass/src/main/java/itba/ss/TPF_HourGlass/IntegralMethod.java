@@ -8,4 +8,6 @@ public interface IntegralMethod {
 
 	public String getName();
 
+	public Accelerator getAccelerator();
+
 }

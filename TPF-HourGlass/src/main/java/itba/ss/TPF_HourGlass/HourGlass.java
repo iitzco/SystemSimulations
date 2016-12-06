@@ -14,6 +14,8 @@ public class HourGlass {
 	static final double MASS = 0.01;
 	static final double MAX_TRIES = 10000;
 
+	static int ITERATIONS_TO_REVERT_GRAVITY = 10000;
+
 	double R;
 	double D;
 
@@ -53,6 +55,8 @@ public class HourGlass {
 		BOTTOM = -TOP;
 
 		MARGIN = TOP / R;
+
+		ITERATIONS_TO_REVERT_GRAVITY = (int) (1 / dT);
 
 		this.tf = tf;
 		this.dt = dT;
@@ -141,6 +145,11 @@ public class HourGlass {
 		double currentTime = 0;
 
 		int iteration = 0;
+
+		int iterationToRevertGravity = 0;
+		boolean allPassedHalf = true;
+		boolean existsFreeParticle = false;
+
 		while (currentTime < tf) {
 
 			// TODO -> cell_index method and then remember to filter neighbors!
@@ -150,8 +159,17 @@ public class HourGlass {
 
 			addWallParticles(neighbors);
 
+			allPassedHalf = true;
+			existsFreeParticle = false;
 			for (Particle particle : particles) {
-				Particle p = integralMethod.moveParticle(particle, neighbors.get(particle));
+				Set<Particle> n = neighbors.get(particle);
+				Particle p = integralMethod.moveParticle(particle, n);
+				if (!passedHalf(p)) {
+					allPassedHalf = false;
+				}
+				if (n.size() == 0) {
+					existsFreeParticle = true;
+				}
 				nextGen.add(p);
 			}
 			if (Math.abs(currentTime / dt2 - Math.round(currentTime / dt2)) < EPSILON) {
@@ -160,7 +178,19 @@ public class HourGlass {
 			this.particles = nextGen;
 			currentTime += dt;
 			iteration++;
+			if (allPassedHalf && !existsFreeParticle)
+				iterationToRevertGravity++;
+			else
+				iterationToRevertGravity = 0;
+			if (iterationToRevertGravity == ITERATIONS_TO_REVERT_GRAVITY) {
+				integralMethod.getAccelerator().reverseGravity();
+				iterationToRevertGravity = 0;
+			}
 		}
+	}
+
+	private boolean passedHalf(Particle p) {
+		return Math.signum(p.z) == Math.signum(integralMethod.getAccelerator().getGravity());
 	}
 
 	private void addWallParticles(Map<Particle, Set<Particle>> neighbors) {
@@ -190,7 +220,7 @@ public class HourGlass {
 			ret.add(p);
 		}
 		double levelZeroRadius = Math.sqrt(Math.pow(R, 2) - Math.pow(bound, 2));
-		if (Math.pow(particle.x, 2) + Math.pow(particle.y, 2) > Math.pow(levelZeroRadius, 2)) {
+		if (Math.sqrt(Math.pow(particle.x, 2) + Math.pow(particle.y, 2)) + particle.r > levelZeroRadius) {
 			double d = sign == 1 ? distanceToCenterTop(particle) : distanceToCenterBottom(particle);
 			if (d > (R - particle.r) && d < (R + particle.r)) {
 				double vecX = particle.x;
