@@ -353,7 +353,7 @@ public class HourGlass {
 		if (bounds == null) {
 			bounds = new ArrayList<>();
 			int base = size;
-			double r = D / 100.0;
+			double r = 0.01;
 			double percentage = 50.0;
 			Particle p = null;
 			for (double i = Math.sqrt(Math.pow(R, 2) - Math.pow(TOP, 2)); i < R; i += (R / percentage)) {
