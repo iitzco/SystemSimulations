@@ -156,6 +156,9 @@ public class HourGlass {
 		boolean existsFreeParticle = false;
 
 		double measuredTime = 0;
+		System.err.println("FLIP 0:");
+
+		Set<Particle> passedHalfParticles = new HashSet<>();
 
 		while (maxTime == 0 || currentTime < maxTime) {
 
@@ -172,8 +175,14 @@ public class HourGlass {
 			for (Particle particle : particles) {
 				Set<Particle> n = neighbors.get(particle);
 				Particle p = integralMethod.moveParticle(particle, n);
-				if (!passedHalf(p))
+				if (!passedHalf(p)) {
 					allPassedHalf = false;
+				} else {
+					if (!passedHalfParticles.contains(p)) {
+						System.err.println(measuredTime);
+						passedHalfParticles.add(p);
+					}
+				}
 				if (n.size() == 0)
 					existsFreeParticle = true;
 				nextGen.add(p);
@@ -188,7 +197,7 @@ public class HourGlass {
 			iteration++;
 
 			if (allPassedHalf && measuredTimes.size() == currFlips) {
-				System.err.println("Flip " + currFlips + ": " + measuredTime);
+				System.err.println("AVG FLIP " + currFlips + ": " + measuredTime);
 				measuredTimes.add(measuredTime);
 			}
 
@@ -200,11 +209,14 @@ public class HourGlass {
 			if (iterationToRevertGravity == ITERATIONS_TO_REVERT_GRAVITY) {
 				integralMethod.getAccelerator().reverseGravity();
 				currFlips++;
+				passedHalfParticles = new HashSet<>();
 				iterationToRevertGravity = 0;
 				measuredTime = 0;
 
 				if (currFlips > flips)
 					return;
+				else
+					System.err.println("FLIP " + currFlips + ":");
 			}
 		}
 		System.err.println("Time run out at flip " + currFlips);
@@ -225,11 +237,13 @@ public class HourGlass {
 		List<Particle> ret = new ArrayList<>();
 		Particle p = null;
 
+		int base = particles.size();
+
 		int sign = particle.z >= 0 ? 1 : -1;
 		double bound = particle.z >= 0 ? TOP : BOTTOM;
 
 		if (sign * (particle.z + sign * particle.r) > sign * bound) {
-			p = new Particle(0, particle.r, particle.mass);
+			p = new Particle(base++, particle.r, particle.mass);
 			p.isWall = true;
 			p.x = particle.x;
 			p.y = particle.y;
@@ -259,7 +273,7 @@ public class HourGlass {
 				double y = normVecY * (R + particle.r);
 				double z = normVecZ * (R + particle.r);
 
-				p = new Particle(0, particle.r, particle.mass);
+				p = new Particle(base++, particle.r, particle.mass);
 				p.isWall = true;
 				p.x = x;
 				p.y = y;
@@ -282,7 +296,7 @@ public class HourGlass {
 			double x = normVecX * levelZeroRadius;
 			double y = normVecY * levelZeroRadius;
 
-			p = new Particle(0, 0, Double.MAX_VALUE);
+			p = new Particle(base++, 0, Double.MAX_VALUE);
 			p.isWall = true;
 			p.x = x;
 			p.y = y;
@@ -372,11 +386,13 @@ public class HourGlass {
 	}
 
 	public void printAvgTime() {
-		double aux = 0;
-		for (Double each : measuredTimes) {
-			aux += each;
+		if (measuredTimes.size() > 0) {
+			double aux = 0;
+			for (Double each : measuredTimes) {
+				aux += each;
+			}
+			System.err.println("AVG: " + (aux / measuredTimes.size()));
 		}
-		System.err.println("AVG: " + (aux / measuredTimes.size()));
 	}
 
 	public static void main(String[] args) {
