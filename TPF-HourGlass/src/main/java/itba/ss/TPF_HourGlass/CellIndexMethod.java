@@ -1,6 +1,5 @@
 package itba.ss.TPF_HourGlass;
 
-import java.awt.Point;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -8,28 +7,40 @@ import java.util.Set;
 
 public class CellIndexMethod {
 
-	Cell[][] matrix;
-	Map<Particle, Point> allParticles;
+	private static class Point3D {
+
+		int x;
+		int y;
+		int z;
+
+		public Point3D(int x, int y, int z) {
+			super();
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
+
+	}
+
+	Cell[][][] matrix;
+	Map<Particle, Point3D> allParticles;
 	double L;
-	double W;
 	double rc;
 	double cellLen;
 	int N;
 	int M;
-	boolean contour;
 
-	public CellIndexMethod(double L, double rc, boolean contour) {
+	public CellIndexMethod(double L, double rc) {
 		this.L = L;
 		this.rc = rc;
-		this.contour = contour;
 		this.M = (int) Math.floor(L / rc);
 	}
 
-	private void addNeighbors(Cell c, Particle p, Map<Particle, Set<Particle>> m, int deltaX, int deltaY) {
+	private void addNeighbors(Cell c, Particle p, Map<Particle, Set<Particle>> m) {
 		for (Particle candidate : c.set) {
 			if (!candidate.equals(p)) {
 				if (!m.get(p).contains(candidate)) {
-					double distance = Math.max(getDistance(p, candidate, deltaX, deltaY), 0);
+					double distance = Math.max(getDistance(p, candidate), 0);
 					if (distance <= rc) {
 						m.get(p).add(candidate);
 						if (!m.containsKey(candidate))
@@ -47,39 +58,32 @@ public class CellIndexMethod {
 		for (Particle particle : allParticles.keySet()) {
 			if (!map.containsKey(particle))
 				map.put(particle, new HashSet<Particle>());
-			Point coords = allParticles.get(particle);
+			Point3D coords = allParticles.get(particle);
 			Cell aux;
 
-			aux = matrix[coords.x][coords.y];
-			addNeighbors(aux, particle, map, 0, 0);
+			for (int i = -1; i <= 1; i++) {
+				if (coords.z + i >= 0 && coords.z + i < M) {
+					aux = matrix[coords.x][coords.y][coords.z + i];
+					addNeighbors(aux, particle, map);
 
-			aux = matrix[(coords.x - 1 + M) % M][coords.y];
-			if (coords.x - 1 >= 0) {
-				addNeighbors(aux, particle, map, 0, 0);
-			} else if (contour) {
-				addNeighbors(aux, particle, map, -1, 0);
-			}
+					aux = matrix[(coords.x - 1 + M) % M][coords.y][coords.z + i];
+					if (coords.x - 1 >= 0)
+						addNeighbors(aux, particle, map);
 
-			aux = matrix[(coords.x - 1 + M) % M][(coords.y + 1) % M];
-			if (coords.x - 1 >= 0 && coords.y + 1 < M) {
-				addNeighbors(aux, particle, map, 0, 0);
-			} else if (contour) {
-				addNeighbors(aux, particle, map, coords.x - 1 >= 0 ? 0 : -1, coords.y + 1 < M ? 0 : 1);
-			}
+					aux = matrix[(coords.x - 1 + M) % M][(coords.y + 1) % M][coords.z + i];
+					if (coords.x - 1 >= 0 && coords.y + 1 < M)
+						addNeighbors(aux, particle, map);
 
-			aux = matrix[coords.x][(coords.y + 1) % M];
-			if (coords.y + 1 < M) {
-				addNeighbors(aux, particle, map, 0, 0);
-			} else if (contour) {
-				addNeighbors(aux, particle, map, 0, 1);
-			}
+					aux = matrix[coords.x][(coords.y + 1) % M][coords.z + i];
+					if (coords.y + 1 < M)
+						addNeighbors(aux, particle, map);
 
-			aux = matrix[(coords.x + 1) % M][(coords.y + 1) % M];
+					aux = matrix[(coords.x + 1) % M][(coords.y + 1) % M][coords.z + i];
 
-			if (coords.x + 1 < M && coords.y + 1 < M) {
-				addNeighbors(aux, particle, map, 0, 0);
-			} else if (contour) {
-				addNeighbors(aux, particle, map, coords.x + 1 < M ? 0 : 1, coords.y + 1 < M ? 0 : 1);
+					if (coords.x + 1 < M && coords.y + 1 < M)
+						addNeighbors(aux, particle, map);
+				}
+
 			}
 
 		}
@@ -87,22 +91,24 @@ public class CellIndexMethod {
 		return map;
 	}
 
-	private double getDistance(Particle fixed, Particle moving, int deltaX, int deltaY) {
-		return Math
-				.sqrt(Math.pow(fixed.x - (moving.x + deltaX * L), 2) + Math.pow(fixed.y - (moving.y + deltaY * L), 2))
+	private double getDistance(Particle fixed, Particle moving) {
+		return Math.sqrt(
+				Math.pow(fixed.x - moving.x, 2) + Math.pow(fixed.y - moving.y, 2) + Math.pow(fixed.z - moving.z, 2))
 				- fixed.r - moving.r;
 	}
 
-	public void load(Set<Particle> particles) {
+	public void load(Set<Particle> particles, double R, double bottom) {
 
 		allParticles = new HashMap<>();
 
 		cellLen = ((double) L) / M;
 
-		matrix = new Cell[M][M];
+		matrix = new Cell[M][M][M];
 		for (int i = 0; i < matrix.length; i++) {
 			for (int j = 0; j < matrix.length; j++) {
-				matrix[i][j] = new Cell();
+				for (int k = 0; k < matrix.length; k++) {
+					matrix[i][j][k] = new Cell();
+				}
 			}
 		}
 
@@ -110,10 +116,12 @@ public class CellIndexMethod {
 
 		for (Particle p : particles) {
 
-			int x = (int) (p.x / cellLen);
-			int y = (int) (p.y / cellLen);
-			matrix[x][y].set.add(p);
-			allParticles.put(p, new Point(x, y));
+			int x = (int) ((p.x + R) / cellLen);
+			int y = (int) ((p.y + R) / cellLen);
+			int z = (int) ((p.z - bottom) / cellLen);
+//			System.err.println("X " + x + " Y " + y + " Z " + z);
+			matrix[x][y][z].set.add(p);
+			allParticles.put(p, new Point3D(x, y, z));
 			if (maxRad < p.r)
 				maxRad = p.r;
 

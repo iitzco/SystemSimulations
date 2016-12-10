@@ -160,10 +160,20 @@ public class HourGlass {
 
 		Set<Particle> passedHalfParticles = new HashSet<>();
 
+		CellIndexMethod method = new CellIndexMethod(2 * this.R, 2 * D / 4);
+
 		while (maxTime == 0 || currentTime < maxTime) {
 
+			try {
+				method.load(new HashSet<>(this.particles), R, BOTTOM);
+			} catch (IndexOutOfBoundsException e) {
+				System.err.println("Delta T was too big. Try with smaller");
+				System.exit(1);
+			}
 			// TODO -> cell_index method and then remember to filter neighbors!
-			Map<Particle, Set<Particle>> neighbors = findNeighbors();
+			Map<Particle, Set<Particle>> neighbors = method.findNeighbors();
+
+			neighbors = filterNeighbors(neighbors);
 
 			List<Particle> nextGen = new ArrayList<>();
 
@@ -220,6 +230,21 @@ public class HourGlass {
 			}
 		}
 		System.err.println("Time run out at flip " + currFlips);
+	}
+
+	public Map<Particle, Set<Particle>> filterNeighbors(Map<Particle, Set<Particle>> original) {
+		Map<Particle, Set<Particle>> ret = new HashMap<>();
+		for (Particle particle : original.keySet()) {
+			HashSet<Particle> set = new HashSet<>();
+			for (Particle neighbor : original.get(particle)) {
+				if (getDistance(particle.x, particle.y, particle.z, neighbor.x, neighbor.y,
+						neighbor.z) <= (particle.r + neighbor.r)) {
+					set.add(neighbor);
+				}
+			}
+			ret.put(particle, set);
+		}
+		return ret;
 	}
 
 	private boolean passedHalf(Particle p) {
