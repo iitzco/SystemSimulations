@@ -26,12 +26,11 @@ public class HourGlass {
 
 	double m = 0.01;
 
-	double end;
-
 	double dt;
 	double dt2;
+	double maxTime;
 
-	int option;
+	int flips;
 
 	int maxParticles;
 
@@ -47,7 +46,7 @@ public class HourGlass {
 
 	List<Double> measuredTimes;
 
-	public HourGlass(double r, double d, double s, double end, double dT, double dT2, int option, int maxParticles,
+	public HourGlass(double r, double d, double s, double dT, double dT2, int flips, double maxTime, int maxParticles,
 			IntegralMethod integralMethod) {
 		super();
 		R = r;
@@ -61,14 +60,13 @@ public class HourGlass {
 
 		ITERATIONS_TO_REVERT_GRAVITY = (int) (1 / dT);
 
-		this.end = end;
+		this.flips = flips;
 
+		this.maxTime = maxTime;
 		this.dt = dT;
 		this.dt2 = dT2;
 
 		this.maxParticles = maxParticles;
-
-		this.option = option;
 
 		this.integralMethod = integralMethod;
 
@@ -152,14 +150,14 @@ public class HourGlass {
 
 		int iteration = 0;
 		int iterationToRevertGravity = 0;
-		int flips = 0;
+		int currFlips = 0;
 
 		boolean allPassedHalf = true;
 		boolean existsFreeParticle = false;
 
 		double measuredTime = 0;
 
-		while ((option == 0 && currentTime < end) || (option == 1)) {
+		while (maxTime == 0 || currentTime < maxTime) {
 
 			// TODO -> cell_index method and then remember to filter neighbors!
 			Map<Particle, Set<Particle>> neighbors = findNeighbors();
@@ -189,8 +187,8 @@ public class HourGlass {
 			measuredTime += dt;
 			iteration++;
 
-			if (allPassedHalf && measuredTimes.size() == flips) {
-				System.err.println("Flip " + flips + ": " + measuredTime);
+			if (allPassedHalf && measuredTimes.size() == currFlips) {
+				System.err.println("Flip " + currFlips + ": " + measuredTime);
 				measuredTimes.add(measuredTime);
 			}
 
@@ -201,14 +199,15 @@ public class HourGlass {
 
 			if (iterationToRevertGravity == ITERATIONS_TO_REVERT_GRAVITY) {
 				integralMethod.getAccelerator().reverseGravity();
-				flips++;
+				currFlips++;
 				iterationToRevertGravity = 0;
 				measuredTime = 0;
 
-				if (option == 1 && flips > end)
+				if (currFlips > flips)
 					return;
 			}
 		}
+		System.err.println("Time run out at flip " + currFlips);
 	}
 
 	private boolean passedHalf(Particle p) {
@@ -385,15 +384,14 @@ public class HourGlass {
 		double D = 1;
 		double S = 0.25;
 
-		double end = 1;
+		int flips = 0;
+		double maxTime = 0;
 		double deltaT = 0.000001;
 		double deltaT2 = 0.02;
 		double kn = 1E4;
 		double gamma = 100;
 
 		int maxParticles = Integer.MAX_VALUE;
-
-		int option = 0;
 
 		try {
 			R = Double.valueOf(args[0]);
@@ -403,25 +401,20 @@ public class HourGlass {
 			deltaT2 = Double.valueOf(args[4]);
 			kn = Double.valueOf(args[5]);
 			gamma = Double.valueOf(args[6]);
-			end = Double.valueOf(args[7]);
-			if (args[8].equals("time"))
-				option = 0;
-			else if (args[8].equals("flips"))
-				option = 1;
-			else
-				throw new Exception();
+			flips = Integer.valueOf(args[7]);
+			maxTime = Double.valueOf(args[8]);
 			if (args.length == 10) {
 				maxParticles = Integer.valueOf(args[9]);
 			}
 		} catch (Exception e) {
-			System.err.println("Wrong Parameters. Expect R D S deltaT deltaT2 kn kt end [time|flips] (maxParticles)");
+			System.err.println("Wrong Parameters. Expect R D S deltaT deltaT2 kn kt flips maxTime (maxParticles)");
 			return;
 		}
 
 		Accelerator accelerator = new GranularAccelerator(kn, gamma);
 		IntegralMethod integralMethod = new Beeman(deltaT, accelerator);
 
-		HourGlass g = new HourGlass(R, D, S, end, deltaT, deltaT2, option, maxParticles, integralMethod);
+		HourGlass g = new HourGlass(R, D, S, deltaT, deltaT2, flips, maxTime, maxParticles, integralMethod);
 		g.run();
 		g.printAvgTime();
 
