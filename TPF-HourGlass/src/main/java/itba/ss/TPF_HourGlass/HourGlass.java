@@ -40,6 +40,8 @@ public class HourGlass {
 
 	long caudal = 0;
 
+	double maxSpeed;
+
 	IntegralMethod integralMethod;
 
 	List<Particle> bounds;
@@ -70,7 +72,9 @@ public class HourGlass {
 
 		this.integralMethod = integralMethod;
 
-		measuredTimes = new ArrayList<>();
+		this.measuredTimes = new ArrayList<>();
+
+		this.maxSpeed = -1;
 
 		locateParticles(maxParticles);
 	}
@@ -156,24 +160,22 @@ public class HourGlass {
 		boolean existsFreeParticle = false;
 
 		double measuredTime = 0;
+		System.err.println("PARTICLES " + particles.size());
 		System.err.println("FLIP 0:");
 
 		Set<Particle> passedHalfParticles = new HashSet<>();
 
-		CellIndexMethod method = new CellIndexMethod(2 * this.R, 2 * D / 4);
+		// CellIndexMethod method = new CellIndexMethod(3 * this.R, 2 * D / 4);
 
 		while (maxTime == 0 || currentTime < maxTime) {
 
-			try {
-				method.load(new HashSet<>(this.particles), R, BOTTOM);
-			} catch (IndexOutOfBoundsException e) {
-				System.err.println("Delta T was too big. Try with smaller");
-				System.exit(1);
-			}
-			// TODO -> cell_index method and then remember to filter neighbors!
-			Map<Particle, Set<Particle>> neighbors = method.findNeighbors();
-
-			neighbors = filterNeighbors(neighbors);
+			// try {
+			// method.load(new HashSet<>(this.particles), R, BOTTOM);
+			// } catch (IndexOutOfBoundsException e) {
+			// System.err.println("Delta T was too big. Try with smaller");
+			// System.exit(1);
+			// }
+			Map<Particle, Set<Particle>> neighbors = findNeighbors();
 
 			List<Particle> nextGen = new ArrayList<>();
 
@@ -365,12 +367,29 @@ public class HourGlass {
 		System.out.println(particles.size() + bounds.size());
 		System.out.println("t " + iteration);
 
+		calculateMaxSpeed();
+
 		for (Particle p : particles) {
-			System.out.println(p.id + "\t" + p.x + "\t" + p.y + "\t" + p.z + "\t" + p.r + "\t" + p.mass + "\t" + 0);
+			double relative_speed = 1;
+			if (maxSpeed > 0) {
+				relative_speed = p.getVelocity() / maxSpeed;
+			}
+			System.out.println(p.id + "\t" + p.x + "\t" + p.y + "\t" + p.z + "\t" + p.r + "\t" + p.mass + "\t"
+					+ relative_speed + "\t" + ((relative_speed / 2) + 0.5) + "\t"
+					+ ((Math.abs(1 - relative_speed) / 2) + 0.5) + "\t0");
 		}
 
 		for (Particle p : bounds) {
-			System.out.println(p.id + "\t" + p.x + "\t" + p.y + "\t" + p.z + "\t" + p.r + "\t" + p.mass + "\t" + 0.5);
+			System.out.println(
+					p.id + "\t" + p.x + "\t" + p.y + "\t" + p.z + "\t" + p.r + "\t" + p.mass + "\t1\t1\t1\t0.5");
+		}
+	}
+
+	private void calculateMaxSpeed() {
+		for (Particle particle : particles) {
+			double auxSpeed = particle.getVelocity();
+			if (auxSpeed > maxSpeed)
+				maxSpeed = auxSpeed;
 		}
 	}
 

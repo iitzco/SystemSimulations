@@ -83,11 +83,8 @@ public class CellIndexMethod {
 					if (coords.x + 1 < M && coords.y + 1 < M)
 						addNeighbors(aux, particle, map);
 				}
-
 			}
-
 		}
-
 		return map;
 	}
 
@@ -112,18 +109,13 @@ public class CellIndexMethod {
 			}
 		}
 
-		double maxRad = 0;
-
 		for (Particle p : particles) {
-
 			int x = (int) ((p.x + R) / cellLen);
 			int y = (int) ((p.y + R) / cellLen);
 			int z = (int) ((p.z - bottom) / cellLen);
-//			System.err.println("X " + x + " Y " + y + " Z " + z);
+			// System.err.println("X " + x + " Y " + y + " Z " + z);
 			matrix[x][y][z].set.add(p);
 			allParticles.put(p, new Point3D(x, y, z));
-			if (maxRad < p.r)
-				maxRad = p.r;
 
 		}
 	}
