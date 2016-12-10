@@ -93,7 +93,7 @@ public class HourGlass {
 			do {
 				x = Math.random() * (this.R * 2 - 2 * r) - R + r;
 				y = Math.random() * (this.R * 2 - 2 * r) - R + r;
-				z = (Math.random() * (this.R - 2 * r) + r) - ((1 - MARGIN) * R);
+				z = (Math.random() * (this.TOP - 2 * r) + r);
 
 				tries++;
 				if (tries == MAX_TRIES) {
